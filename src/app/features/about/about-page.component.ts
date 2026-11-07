@@ -7,17 +7,32 @@ import { I18nService } from '../../core/services/i18n.service';
   standalone: true,
   imports: [RouterLink],
   template: `
-    <section class="page-hero page-shell">
-      <div class="page-hero-copy">
-        <p class="eyebrow">{{ i18n.t('about.heading.eyebrow') }}</p>
-        <h1>{{ i18n.t('about.heading.title') }}</h1>
-        <p class="lead">{{ i18n.t('about.heading.body') }}</p>
+    <div class="about-hero">
+      <div class="about-hero-bg" aria-hidden="true">
+        <img
+          class="about-hero-img"
+          [src]="heroImage"
+          alt=""
+          fetchpriority="high"
+          decoding="async"
+        >
+        <span class="about-hero-overlay"></span>
       </div>
-      <div class="page-hero-art" aria-hidden="true">
-        <span class="about-mark">A<span>.</span></span>
-        <span class="about-art-note">LEARN<br>CONNECT<br>GROW</span>
-      </div>
-    </section>
+
+      <section class="page-hero page-shell">
+        <div class="page-hero-copy">
+          <p class="eyebrow">{{ i18n.t('about.heading.eyebrow') }}</p>
+          <h1>{{ i18n.t('about.heading.title') }}</h1>
+          <p class="lead">{{ i18n.t('about.heading.body') }}</p>
+        </div>
+        <div class="page-hero-art" aria-hidden="true">
+          <span class="about-logo">
+            <img src="assets/logo.jpg" alt="">
+          </span>
+          <span class="about-art-note">LEARN<br>CONNECT<br>GROW</span>
+        </div>
+      </section>
+    </div>
 
     <section class="about-values section-pad">
       <div class="page-shell">
@@ -120,6 +135,63 @@ import { I18nService } from '../../core/services/i18n.service';
     </section>
   `,
   styles: [`
+    /* ── Hero : image floutée + fondu vers le fond de page ───── */
+    .about-hero {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+    }
+    .about-hero .page-hero {
+      border-bottom: 0; /* le dégradé remplace le trait de séparation */
+    }
+    .about-hero-bg {
+      position: absolute;
+      inset-block: 0;
+      left: 50%;
+      width: 100vw;
+      transform: translateX(-50%);
+      z-index: -1;
+      overflow: hidden;
+      background: var(--paper);
+      -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 45%, rgb(0 0 0 / 55%) 75%, transparent 100%);
+              mask-image: linear-gradient(to bottom, #000 0%, #000 45%, rgb(0 0 0 / 55%) 75%, transparent 100%);
+    }
+    .about-hero-img {
+      position: absolute;
+      inset: -28px; /* cache les bords adoucis par le flou */
+      width: calc(100% + 56px);
+      height: calc(100% + 56px);
+      max-width: none;
+      object-fit: cover;
+      filter: blur(7px) saturate(.9);
+    }
+    .about-hero-overlay {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(to bottom, rgb(248 246 239 / 62%) 0%, rgb(248 246 239 / 74%) 100%);
+    }
+
+    /* ── Logo (même icône que sur l'accueil) ─────────────────── */
+    .about-logo {
+      display: block;
+      width: 120px;
+      height: 120px;
+      margin-inline: auto;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 3px solid var(--brand-coral);
+      box-shadow: 0 0 0 8px rgb(190 100 77 / 12%), 0 0 0 16px rgb(190 100 77 / 6%);
+      background: var(--brand-teal);
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+    }
+    .about-hero .about-art-note { margin-top: 28px; }
+
     .about-social {
       padding-block: clamp(48px, 7vw, 80px);
       border-top: 1px solid var(--line);
@@ -177,5 +249,10 @@ import { I18nService } from '../../core/services/i18n.service';
 })
 export class AboutPageComponent {
   readonly values = [1, 2, 3];
+
+  /* Même image que le hero de l'accueil */
+  readonly heroImage =
+    'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=1920&q=80&auto=format&fit=crop';
+
   constructor(readonly i18n: I18nService) {}
 }

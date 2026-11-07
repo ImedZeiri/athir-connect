@@ -1,9 +1,11 @@
 :host {
-  --header-ink: #183d3b;
-  --header-muted: #6c7771;
-  --header-paper: #f8f6ef;
-  --header-line: #deddd2;
-  --header-coral: #be644d;
+  --header-ink:   #0f1e3d;
+  --header-muted: #4a5878;
+  --header-paper: #ffffff;
+  --header-line:  #d4d9e8;
+  --header-coral: #e8a800;
+  --header-blue:  #1a3a6b;
+  --header-red:   #1a3a6b;
   display: block;
   position: relative;
   z-index: 20;
@@ -13,7 +15,8 @@
 .site-header {
   color: var(--header-ink);
   background: var(--header-paper);
-  border-bottom: 1px solid var(--header-line);
+  border-bottom: 3px solid var(--header-coral);
+  box-shadow: 0 2px 16px rgb(26 58 107 / 8%);
 }
 
 .header-frame {
@@ -114,9 +117,9 @@
 .nav-link {
   position: relative;
   padding-block: 10px;
-  color: #495b55;
+  color: var(--header-muted);
   font-size: 12px;
-  font-weight: 550;
+  font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
   transition: color 180ms ease;
@@ -126,7 +129,7 @@
     inset-inline-start: 0;
     inset-block-end: 3px;
     width: 0;
-    height: 1px;
+    height: 2px;
     content: "";
     background: var(--header-coral);
     transition: width 180ms ease;
@@ -134,7 +137,7 @@
 
   &:hover,
   &.is-active {
-    color: var(--header-ink);
+    color: var(--header-blue);
   }
 
   &:hover::after,
@@ -194,11 +197,11 @@
   gap: 11px;
   min-height: 42px;
   padding: 0 16px;
-  color: #fff9ef;
-  background: var(--header-ink);
+  color: #ffffff;
+  background: var(--header-red);
   font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-weight: 700;
+  letter-spacing: 0.04em;
   text-decoration: none;
   white-space: nowrap;
   transition: background-color 180ms ease, transform 180ms ease;
@@ -214,7 +217,7 @@
   }
 
   &:hover {
-    background: #26534f;
+    background: var(--header-blue);
     transform: translateY(-1px);
   }
 }

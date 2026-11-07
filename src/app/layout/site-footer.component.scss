@@ -1,9 +1,9 @@
 :host {
-  --footer-ink: #e9e7d9;
-  --footer-muted: #b5c0b3;
-  --footer-deep: #173b39;
-  --footer-deeper: #123330;
-  --footer-accent: #dc9071;
+  --footer-ink:    #e8f0ff;
+  --footer-muted:  #8fa3cc;
+  --footer-deep:   #0f1e3d;
+  --footer-deeper: #091429;
+  --footer-accent: #e8a800;
   display: block;
   font-family: "DM Sans", "Trebuchet MS", sans-serif;
 }
@@ -224,11 +224,11 @@
   }
 
   span:nth-child(2) {
-    background: #e9e7d9;
+    background: #ffffff;
   }
 
   span:nth-child(3) {
-    background: #819c77;
+    background: #d42b2b;
   }
 }
 
