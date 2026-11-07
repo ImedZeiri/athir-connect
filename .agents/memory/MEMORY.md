@@ -1,0 +1,1 @@
+- [Replit npm security blocks](replit-npm-firewall.md) — the package firewall can stop `npm ci` on the pinned Angular stack; use an approved compatible upgrade, not a registry bypass.
