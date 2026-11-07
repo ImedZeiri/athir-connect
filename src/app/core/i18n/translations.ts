@@ -533,7 +533,7 @@ const ar: Record<TranslationKey, string> = {
   'hero.title': 'خطوتك القادمة',
   'hero.emphasis': 'تبدأ من هنا.',
   'hero.description': 'دورات اللغات والاستعداد للامتحانات ومرافقة إجراءات الدراسة بالخارج: ابدأ بهدفك وتقدّم بخطوات واضحة.',
-  'hero.primary': 'اكتشف خدماتنا', 'hero.secondary': 'ناقشنا مشروعك',
+  'hero.primary': 'اكتشف خدماتنا', 'hero.secondary': 'تحدّث عن مشروعك',
   'hero.note': 'حوار أول لتوضيح الخطوة التالية.',
   'a11y.skipToContent': 'انتقل إلى المحتوى',
   'home.intro.eyebrow': 'ATHIR CONNECT', 'home.intro.title': 'مهارات تفتح آفاقاً أوسع.',
