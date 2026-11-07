@@ -1,0 +1,83 @@
+<header class="site-header" [attr.dir]="direction" [attr.lang]="language">
+  <div class="header-frame">
+    <div class="header-brand">
+      <a class="brand-lockup" routerLink="/" [attr.aria-label]="'ATHIR CONNECT'" (click)="closeMenu()">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 42 42" fill="none">
+            <path d="M21 3.5 38.5 13.6v14.8L21 38.5 3.5 28.4V13.6L21 3.5Z" />
+            <path d="m12.7 26.8 8.3-14.4 8.3 14.4M16 21.2h10" />
+            <circle cx="21" cy="21" r="2.1" />
+          </svg>
+        </span>
+        <span class="brand-type">
+          <span class="brand-name">ATHIR <b>CONNECT</b></span>
+          <span class="brand-tagline">{{ copy['brand.tagline'] }}</span>
+        </span>
+      </a>
+    </div>
+
+    <p class="header-eyebrow">
+      <span class="eyebrow-rule" aria-hidden="true"></span>
+      {{ copy['header.eyebrow'] }}
+    </p>
+
+    <button
+      #menuToggle
+      class="menu-toggle"
+      type="button"
+      [attr.aria-expanded]="menuOpen"
+      aria-controls="primary-navigation"
+      [attr.aria-label]="menuOpen ? (copy['header.closeMenu'] || 'Close navigation') : (copy['header.openMenu'] || 'Open navigation')"
+      (click)="toggleMenu()"
+    >
+      <span class="menu-toggle-lines" [class.is-open]="menuOpen" aria-hidden="true">
+        <span></span><span></span>
+      </span>
+    </button>
+
+    <nav
+      id="primary-navigation"
+      class="primary-navigation"
+      [class.is-open]="menuOpen"
+      [attr.aria-label]="copy['header.navigation'] || 'Primary navigation'"
+      (keydown)="handleMenuKeydown($event)"
+    >
+      <div class="nav-links">
+        @for (item of links; track item.path) {
+          <a
+            class="nav-link"
+            [routerLink]="item.path"
+            [class.is-active]="isActive(item.path)"
+            [attr.aria-current]="isActive(item.path) ? 'page' : null"
+            (click)="closeMenu()"
+          >{{ copy[item.key] }}</a>
+        }
+      </div>
+
+      <div class="nav-utilities">
+        <label class="language-picker">
+          <span class="visually-hidden">{{ copy['header.language'] || 'Language selection' }}</span>
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <circle cx="10" cy="10" r="7.1"></circle>
+            <path d="M2.9 10h14.2M10 2.9c1.9 2 2.8 4.4 2.8 7.1s-.9 5.1-2.8 7.1C8.1 15.1 7.2 12.7 7.2 10s.9-5.1 2.8-7.1Z"></path>
+          </svg>
+          <select [value]="language" (change)="selectLanguage($event)">
+            @for (option of languages; track option.code) {
+              <option [value]="option.code">{{ option.nativeName }}</option>
+            }
+          </select>
+          <svg class="select-chevron" viewBox="0 0 12 12" aria-hidden="true">
+            <path d="m3 4.5 3 3 3-3"></path>
+          </svg>
+        </label>
+
+        <a class="apply-link" routerLink="/pre-registration" (click)="closeMenu()">
+          <span>{{ copy['nav.apply'] }}</span>
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M4 10h11M10 4l6 6-6 6"></path>
+          </svg>
+        </a>
+      </div>
+    </nav>
+  </div>
+</header>

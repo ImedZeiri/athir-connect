@@ -1,0 +1,56 @@
+<footer class="site-footer" [attr.dir]="direction" [attr.lang]="language">
+  <div class="footer-inner">
+    <div class="footer-main">
+      <section class="footer-brand-column" aria-label="ATHIR CONNECT">
+        <a class="footer-brand" routerLink="/" aria-label="ATHIR CONNECT">
+          <span class="footer-mark" aria-hidden="true">
+            <svg viewBox="0 0 42 42" fill="none">
+              <path d="M21 3.5 38.5 13.6v14.8L21 38.5 3.5 28.4V13.6L21 3.5Z" />
+              <path d="m12.7 26.8 8.3-14.4 8.3 14.4M16 21.2h10" />
+              <circle cx="21" cy="21" r="2.1" />
+            </svg>
+          </span>
+          <span class="footer-brand-name">ATHIR <b>CONNECT</b></span>
+        </a>
+        <p class="footer-description">{{ copy['footer.description'] }}</p>
+      </section>
+
+      <nav class="footer-link-column" [attr.aria-label]="copy['footer.explore'] || 'Explore links'">
+        <h2>{{ copy['footer.explore'] }}</h2>
+        <ul>
+          @for (item of exploreLinks; track item.path) {
+            <li><a [routerLink]="item.path">{{ copy[item.key] }}</a></li>
+          }
+        </ul>
+      </nav>
+
+      <nav class="footer-link-column services-column" [attr.aria-label]="copy['footer.services'] || 'Service links'">
+        <h2>{{ copy['footer.services'] }}</h2>
+        <ul>
+          @for (item of serviceLinks; track item.path) {
+            <li><a [routerLink]="item.path">{{ copy[item.key] }}</a></li>
+          }
+        </ul>
+      </nav>
+
+      <section class="footer-contact-column">
+        <h2>{{ copy['nav.contact'] }}</h2>
+        <p>{{ copy['footer.contact'] }}</p>
+        <a class="footer-cta" routerLink="/pre-registration">
+          <span>{{ copy['footer.cta'] }}</span>
+          <svg viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M4 10h11M10 4l6 6-6 6"></path>
+          </svg>
+        </a>
+      </section>
+    </div>
+
+    <div class="footer-bottom">
+      <span class="footer-wordmark">ATHIR CONNECT</span>
+      <span class="footer-rights">{{ copy['footer.rights'] }}</span>
+      <span class="footer-region" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </span>
+    </div>
+  </div>
+</footer>
