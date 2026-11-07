@@ -16,7 +16,11 @@ import { I18nService } from '../../core/services/i18n.service';
         <p class="eyebrow">{{ i18n.t('serviceDetail.eyebrow') }}</p>
         <h1>{{ i18n.t(key + '.title') }}</h1>
         <p class="lead">{{ i18n.t(key + '.intro') }}</p>
-        <a class="button button-primary" routerLink="/pre-registration">
+        <a
+          class="button button-primary"
+          routerLink="/pre-registration"
+          [queryParams]="{ service: serviceKey }"
+        >
           {{ i18n.t('serviceDetail.cta') }} <span aria-hidden="true">↗</span>
         </a>
       </div>

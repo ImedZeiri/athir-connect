@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { FormsModule, NgForm } from '@angular/forms';
 import { ServiceId } from '../../core/models/site.models';
 import { SERVICE_CATALOG } from '../../core/data/service-catalog';
@@ -69,7 +69,15 @@ import { WhatsappMessageService } from '../../core/services/whatsapp-message.ser
           [attr.aria-invalid]="inquiryForm.submitted && inquiryForm.controls['message']?.invalid"
           [placeholder]="i18n.t('form.messagePlaceholder')"></textarea>
         @if (inquiryForm.submitted && inquiryForm.controls['message']?.invalid) {
-          <small class="field-error">{{ i18n.t('form.required') }}</small>
+          <small class="field-error">
+            {{
+              i18n.t(
+                inquiryForm.controls['message']?.errors?.['minlength']
+                  ? 'form.messageTooShort'
+                  : 'form.required'
+              )
+            }}
+          </small>
         }
       </label>
 
@@ -107,8 +115,9 @@ import { WhatsappMessageService } from '../../core/services/whatsapp-message.ser
     @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } .form-submit, .button-whatsapp { width: 100%; justify-content: center; } }
   `]
 })
-export class InquiryFormComponent {
+export class InquiryFormComponent implements OnChanges {
   @Input() registration = false;
+  @Input() initialService: ServiceId | '' = '';
   readonly services = SERVICE_CATALOG;
   readonly levels = [
     { code: 'A1', key: 'form.levelA1' },
@@ -125,6 +134,12 @@ export class InquiryFormComponent {
     readonly i18n: I18nService,
     private readonly whatsapp: WhatsappMessageService
   ) {}
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['initialService'] && this.initialService) {
+      this.request.service = this.initialService;
+    }
+  }
 
   prepareMessage(form: NgForm): void {
     if (form.invalid) return;

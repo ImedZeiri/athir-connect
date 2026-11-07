@@ -1,4 +1,7 @@
 import { Component } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
+import { SERVICE_CATALOG } from '../../core/data/service-catalog';
+import { ServiceId } from '../../core/models/site.models';
 import { I18nService } from '../../core/services/i18n.service';
 import { InquiryFormComponent } from '../../shared/components/inquiry-form.component';
 
@@ -20,10 +23,18 @@ import { InquiryFormComponent } from '../../shared/components/inquiry-form.compo
         <span aria-hidden="true">i</span>
         <div><h2>{{ i18n.t('registration.noteTitle') }}</h2><p>{{ i18n.t('registration.noteBody') }}</p></div>
       </aside>
-      <div class="contact-form-panel"><app-inquiry-form [registration]="true" /></div>
+      <div class="contact-form-panel">
+        <app-inquiry-form [registration]="true" [initialService]="selectedService" />
+      </div>
     </section>
   `
 })
 export class PreRegistrationPageComponent {
-  constructor(readonly i18n: I18nService) {}
+  readonly selectedService: ServiceId | '';
+
+  constructor(readonly i18n: I18nService, route: ActivatedRoute) {
+    const requestedService = route.snapshot.queryParamMap.get('service');
+    this.selectedService =
+      SERVICE_CATALOG.find((service) => service.id === requestedService)?.id ?? '';
+  }
 }
