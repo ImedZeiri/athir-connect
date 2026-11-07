@@ -1,6 +1,7 @@
 <footer class="site-footer" [attr.dir]="direction" [attr.lang]="language">
   <div class="footer-inner">
     <div class="footer-main">
+
       <section class="footer-brand-column" aria-label="ATHIR CONNECT">
         <a class="footer-brand" routerLink="/" aria-label="ATHIR CONNECT">
           <span class="footer-mark" aria-hidden="true">
@@ -9,39 +10,36 @@
           <span class="footer-brand-name">ATHIR <b>CONNECT</b></span>
         </a>
         <p class="footer-description">{{ copy['footer.description'] }}</p>
-        <div class="footer-social">
-          <span class="footer-social-label">{{ copy['social.follow'] }}</span>
-          <div class="footer-social-icons">
-            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="social-icon" [attr.aria-label]="copy['social.facebook']">
-              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
-              </svg>
-            </a>
-            <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="social-icon" [attr.aria-label]="copy['social.instagram']">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
-                <circle cx="12" cy="12" r="4"/>
-                <circle cx="17.5" cy="6.5" r=".8" fill="currentColor" stroke="none"/>
-              </svg>
-            </a>
-            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="social-icon" [attr.aria-label]="copy['social.linkedin']">
-              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/>
-                <circle cx="4" cy="4" r="2"/>
-              </svg>
-            </a>
-            <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" class="social-icon" [attr.aria-label]="copy['social.youtube']">
-              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/>
-                <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#173b39"/>
-              </svg>
-            </a>
-            <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer" class="social-icon" [attr.aria-label]="copy['social.tiktok']">
-              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.75a4.85 4.85 0 0 1-1.01-.06z"/>
-              </svg>
-            </a>
-          </div>
+        <div class="footer-social-icons">
+          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="social-icon social-facebook" [attr.aria-label]="copy['social.facebook']">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+            </svg>
+          </a>
+          <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" class="social-icon social-instagram" [attr.aria-label]="copy['social.instagram']">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+              <circle cx="12" cy="12" r="4"/>
+              <circle cx="17.5" cy="6.5" r=".8" fill="currentColor" stroke="none"/>
+            </svg>
+          </a>
+          <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="social-icon social-linkedin" [attr.aria-label]="copy['social.linkedin']">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6zM2 9h4v12H2z"/>
+              <circle cx="4" cy="4" r="2"/>
+            </svg>
+          </a>
+          <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" class="social-icon social-youtube" [attr.aria-label]="copy['social.youtube']">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58 2.78 2.78 0 0 0 1.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.96-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/>
+              <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="#173b39"/>
+            </svg>
+          </a>
+          <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer" class="social-icon social-tiktok" [attr.aria-label]="copy['social.tiktok']">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.75a4.85 4.85 0 0 1-1.01-.06z"/>
+            </svg>
+          </a>
         </div>
       </section>
 
@@ -54,7 +52,7 @@
         </ul>
       </nav>
 
-      <nav class="footer-link-column services-column" [attr.aria-label]="copy['footer.services'] || 'Service links'">
+      <nav class="footer-link-column" [attr.aria-label]="copy['footer.services'] || 'Service links'">
         <h2>{{ copy['footer.services'] }}</h2>
         <ul>
           @for (item of serviceLinks; track item.path) {
@@ -65,13 +63,48 @@
 
       <section class="footer-contact-column">
         <h2>{{ copy['nav.contact'] }}</h2>
-        <p>{{ copy['footer.contact'] }}</p>
-        <a class="footer-cta" routerLink="/pre-registration">
-          <span>{{ copy['footer.cta'] }}</span>
-          <svg viewBox="0 0 20 20" aria-hidden="true">
-            <path d="M4 10h11M10 4l6 6-6 6"></path>
-          </svg>
-        </a>
+
+        <!-- Petite carte : un clic ouvre le modal -->
+        <div class="mini-map">
+          <iframe class="mini-map-frame"
+                  [src]="smallMapUrl"
+                  title="Google Maps - ATHIR CONNECT"
+                  loading="lazy"
+                  tabindex="-1"
+                  aria-hidden="true"></iframe>
+          <button type="button" class="mini-map-open" (click)="openMap()"
+                  [attr.aria-label]="copy['footer.enlarge'] || 'Agrandir la carte'">
+            <span class="mini-map-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/>
+                <circle cx="12" cy="9.5" r="2.5"/>
+              </svg>
+              <span>{{ copy['footer.address'] || 'Av. des Martyrs, El Mourouj' }}</span>
+            </span>
+            <span class="mini-map-expand" aria-hidden="true">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 3h5v5M17 3l-6 6M8 17H3v-5M3 17l6-6"/>
+              </svg>
+            </span>
+          </button>
+        </div>
+
+        <div class="footer-contact-actions">
+          <button type="button" class="footer-trace" (click)="openMap(true)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="6" cy="18" r="2.2"/>
+              <circle cx="18" cy="6" r="2.2"/>
+              <path d="M8 18h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h5"/>
+            </svg>
+            <span>{{ copy['footer.trace'] || 'Tracer l’itinéraire' }}</span>
+          </button>
+          <a class="footer-cta" routerLink="/pre-registration">
+            <span>{{ copy['footer.cta'] }}</span>
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M4 10h11M10 4l6 6-6 6"></path>
+            </svg>
+          </a>
+        </div>
       </section>
     </div>
 
@@ -83,4 +116,88 @@
       </span>
     </div>
   </div>
+
+  <!-- Modal carte + itinéraire -->
+  <dialog #dialog class="map-dialog" aria-labelledby="map-modal-title"
+          (click)="onDialogClick($event)" (close)="onNativeClose()">
+    @if (mapOpen) {
+      <div class="map-dialog-inner">
+
+        <header class="map-dialog-head">
+          <div>
+            <h3 id="map-modal-title">{{ copy['footer.location'] || 'Notre localisation' }}</h3>
+            <p>{{ copy['footer.address'] || 'Av. des Martyrs, El Mourouj' }}</p>
+          </div>
+          <button #closeBtn type="button" class="map-close" (click)="closeMap()"
+                  [attr.aria-label]="copy['footer.close'] || 'Fermer'">
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
+              <path d="M5 5l10 10M15 5L5 15"/>
+            </svg>
+          </button>
+        </header>
+
+        <div class="map-dialog-body">
+          <div class="map-frame-wrap">
+            <iframe [src]="mapUrl"
+                    title="Google Maps - ATHIR CONNECT"
+                    allowfullscreen
+                    referrerpolicy="no-referrer-when-downgrade"></iframe>
+          </div>
+
+          <aside class="map-controls">
+            <span class="map-controls-label">{{ copy['footer.travelMode'] || 'Mode de déplacement' }}</span>
+            <div class="map-modes" role="radiogroup" [attr.aria-label]="copy['footer.travelMode'] || 'Mode de déplacement'">
+              @for (opt of travelOptions; track opt.mode) {
+                <button type="button" class="mode-chip" role="radio"
+                        [attr.aria-checked]="travelMode === opt.mode"
+                        [class.is-active]="travelMode === opt.mode"
+                        (click)="setMode(opt.mode)">
+                  {{ copy[opt.key] || opt.fallback }}
+                </button>
+              }
+            </div>
+
+            <button type="button" class="map-btn map-btn--primary" (click)="traceFromMyLocation()"
+                    [disabled]="locating" [attr.aria-busy]="locating">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="3"/>
+                <circle cx="12" cy="12" r="8"/>
+                <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+              </svg>
+              <span>{{ locating ? (copy['footer.locating'] || 'Détection en cours…') : (copy['footer.traceMine'] || 'Tracer depuis ma position') }}</span>
+            </button>
+
+            <div class="map-or" aria-hidden="true"><span>{{ copy['footer.or'] || 'ou' }}</span></div>
+
+            <form class="map-form" (submit)="$event.preventDefault(); traceFromAddress(fromInput.value)">
+              <label class="visually-hidden" for="footer-from">{{ copy['footer.fromAddress'] || 'Adresse de départ' }}</label>
+              <input #fromInput id="footer-from" type="text" autocomplete="street-address"
+                     [placeholder]="copy['footer.fromAddress'] || 'Adresse de départ'">
+              <button type="submit" class="map-go" [attr.aria-label]="copy['footer.go'] || 'Tracer'">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M4 10h11M10 4l6 6-6 6"/>
+                </svg>
+              </button>
+            </form>
+
+            <p class="map-status" [class.is-error]="statusIsError" role="status" aria-live="polite">{{ status }}</p>
+
+            <div class="map-actions">
+              <a class="map-btn map-btn--ghost" [href]="externalUrl" target="_blank" rel="noopener noreferrer">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>
+                </svg>
+                <span>{{ copy['footer.openMap'] || 'Ouvrir dans Google Maps' }}</span>
+              </a>
+              @if (hasRoute) {
+                <button type="button" class="map-reset" (click)="resetRoute(); fromInput.value = ''">
+                  {{ copy['footer.resetRoute'] || 'Réinitialiser' }}
+                </button>
+              }
+            </div>
+          </aside>
+        </div>
+      </div>
+    }
+  </dialog>
 </footer>
