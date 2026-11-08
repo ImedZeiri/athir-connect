@@ -1,4 +1,4 @@
-import { Component, computed, signal } from '@angular/core';
+import { AfterViewInit, Component, computed, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FEATURED_SERVICES } from '../../core/data/service-catalog';
 import { I18nService } from '../../core/services/i18n.service';
@@ -108,7 +108,7 @@ interface Stat {
     </section>
 
     <!-- ── Intro band ─────────────────────────────────────────── -->
-    <section class="intro-band page-shell section-pad">
+    <section class="intro-band page-shell section-pad reveal">
       <p class="eyebrow">{{ i18n.t('home.intro.eyebrow') }}</p>
       <div class="intro-band-content">
         <h2>{{ i18n.t('home.intro.title') }}</h2>
@@ -117,7 +117,7 @@ interface Stat {
     </section>
 
     <!-- ── Services ───────────────────────────────────────────── -->
-    <section class="services-section section-pad">
+    <section class="services-section section-pad reveal">
       <div class="page-shell">
         <div class="section-heading">
           <div>
@@ -135,7 +135,7 @@ interface Stat {
     </section>
 
     <!-- ── Gallery Slider ─────────────────────────────────────── -->
-    <section class="gallery-section section-pad">
+    <section class="gallery-section section-pad reveal">
       <div class="page-shell gallery-header">
         <div>
           <p class="eyebrow">
@@ -191,7 +191,7 @@ interface Stat {
     </section>
 
     <!-- ── Video Section ──────────────────────────────────────── -->
-    <section class="video-section section-pad">
+    <section class="video-section section-pad reveal">
       <div class="page-shell">
         <div class="video-header">
           <p class="eyebrow">
@@ -258,7 +258,7 @@ interface Stat {
     </section>
 
     <!-- ── Stats band ──────────────────────────────────────────── -->
-    <div class="stats-band">
+    <div class="stats-band reveal">
       <div class="stats-band-inner page-shell">
         <div class="stats-brand-col">
           <img
@@ -285,7 +285,7 @@ interface Stat {
     </div>
 
     <!-- ── Reviews ───────────────────────────────────────────────── -->
-    <section class="reviews-section">
+    <section class="reviews-section reveal">
       <div class="reviews-bg-strip" aria-hidden="true"></div>
       <div class="page-shell reviews-inner">
         <div class="reviews-header">
@@ -407,7 +407,7 @@ interface Stat {
     </section>
 
     <!-- ── Steps ──────────────────────────────────────────────── -->
-    <section class="steps-section section-pad">
+    <section class="steps-section section-pad reveal">
       <div class="page-shell">
         <div class="steps-heading">
           <p class="eyebrow">{{ i18n.t('home.steps.eyebrow') }}</p>
@@ -428,7 +428,7 @@ interface Stat {
     </section>
 
     <!-- ── Promise ────────────────────────────────────────────── -->
-    <section class="promise-section">
+    <section class="promise-section reveal">
       <div class="page-shell promise-inner">
         <div class="promise-mark" aria-hidden="true">A<span>.</span></div>
         <div>
@@ -446,7 +446,7 @@ interface Stat {
     </section>
 
     <!-- ── CTA ────────────────────────────────────────────────── -->
-    <section class="home-cta-section page-shell">
+    <section class="home-cta-section page-shell reveal">
       <div class="home-cta-copy">
         <p class="eyebrow">{{ i18n.t('contact.heading.eyebrow') }}</p>
         <h2>{{ i18n.t('home.cta.title') }}</h2>
@@ -1227,7 +1227,7 @@ interface Stat {
     `,
   ],
 })
-export class HomePageComponent {
+export class HomePageComponent implements AfterViewInit {
   readonly featuredServices = FEATURED_SERVICES;
   readonly steps = [1, 2, 3];
   readonly activeVideo = signal<string | null>(null);
@@ -1237,6 +1237,20 @@ export class HomePageComponent {
     'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=1920&q=80&auto=format&fit=crop';
 
   constructor(readonly i18n: I18nService) {}
+
+  ngAfterViewInit(): void {
+    if (typeof IntersectionObserver === 'undefined') return;
+    const obs = new IntersectionObserver(
+      (entries) => entries.forEach(e => {
+        if (e.isIntersecting) {
+          (e.target as HTMLElement).classList.add('is-visible');
+          obs.unobserve(e.target);
+        }
+      }),
+      { threshold: 0.1 }
+    );
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+  }
 
   /* ── Gallery rows — each array is duplicated for seamless loop ── */
   private readonly row1: GalleryItem[] = [

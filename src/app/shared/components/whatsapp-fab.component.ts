@@ -10,6 +10,8 @@ import {
 import { I18nService } from '../../core/services/i18n.service';
 
 const WA_NUMBER = '213XXXXXXXXX'; // ← remplacer par le vrai numéro
+const WA_HR_NUMBER = '213XXXXXXXXX'; // ← numéro WhatsApp de l'agent RH
+const HR_GREETING = 'Bonjour, je souhaite échanger avec un agent RH.';
 
 interface ChatMessage {
   id: number;
@@ -17,6 +19,8 @@ interface ChatMessage {
   text: string;
   time: string;
   cta?: boolean;
+  /** Lien du bouton CTA (par défaut : conseiller général). */
+  href?: string;
 }
 
 interface Topic {
@@ -76,9 +80,12 @@ const TOPICS: Topic[] = [
 ];
 
 const AGENT_LABEL = '💬 Parler à un conseiller';
+const HR_LABEL = '👔 Parler à un agent RH';
 const AGENT_KEYWORDS = ['conseiller', 'humain', 'agent', 'whatsapp', 'appeler', 'téléphone', 'telephone', 'contact'];
 const HELLO_KEYWORDS = ['bonjour', 'salut', 'salam', 'hello', 'hi', 'bonsoir', 'مرحبا'];
 const PRICE_KEYWORDS = ['prix', 'tarif', 'coût', 'cout', 'combien', 'gratuit'];
+/** Mots entiers uniquement (évite « rh » dans un autre mot). */
+const HR_PATTERN = /(^|[^\p{L}])(rh|ressources humaines|recrutement|recruter|carri[èe]res?|cv|offres? d.emploi)(?![\p{L}])/iu;
 
 @Component({
   selector: 'app-whatsapp-fab',
@@ -95,7 +102,7 @@ const PRICE_KEYWORDS = ['prix', 'tarif', 'coût', 'cout', 'combien', 'gratuit'];
       >
         <header class="chat-header">
           <span class="chat-avatar">
-            <img src="assets/logo.jpg" alt="" width="42" height="42">
+            <img src="assets/logo.jpg" alt="" width="34" height="34">
           </span>
           <div class="chat-info">
             <strong>ATHIR CONNECT</strong>
@@ -114,6 +121,18 @@ const PRICE_KEYWORDS = ['prix', 'tarif', 'coût', 'cout', 'combien', 'gratuit'];
           </button>
         </header>
 
+        <!-- Épinglé : toujours visible en haut de la discussion -->
+        <a class="chat-pin" [href]="hrUrl" target="_blank" rel="noopener noreferrer" (click)="onHrClick()">
+          <span class="chat-pin-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5M9 3h6l-1 6 3 3v2H7v-2l3-3-1-6z"/></svg>
+          </span>
+          <span class="chat-pin-text">
+            <strong>Parler à un agent RH</strong>
+            <small>Réponse directe sur WhatsApp</small>
+          </span>
+          <svg class="chat-pin-go" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10h11M10 4l6 6-6 6"/></svg>
+        </a>
+
         <div class="chat-body" #scroller aria-live="polite">
           <span class="chat-day">Aujourd’hui</span>
 
@@ -121,7 +140,7 @@ const PRICE_KEYWORDS = ['prix', 'tarif', 'coût', 'cout', 'combien', 'gratuit'];
             <div class="msg" [class.msg-user]="m.from === 'user'" [class.msg-bot]="m.from === 'bot'">
               <p>{{ m.text }}</p>
               @if (m.cta) {
-                <a class="msg-cta" [href]="waUrl" target="_blank" rel="noopener noreferrer">
+                <a class="msg-cta" [href]="m.href || waUrl" target="_blank" rel="noopener noreferrer">
                   <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
                     <path d="M22.5 19.5c-.4-.2-2.36-1.16-2.72-1.3-.36-.13-.62-.2-.88.2-.26.4-1.02 1.3-1.25 1.56-.23.27-.46.3-.86.1-.4-.2-1.68-.62-3.2-1.97-1.18-1.05-1.98-2.35-2.21-2.75-.23-.4-.02-.62.17-.82.18-.18.4-.46.6-.7.2-.22.26-.4.4-.66.13-.26.06-.5-.03-.7-.1-.2-.88-2.17-1.2-2.97-.32-.77-.65-.67-.88-.68H9.5c-.26 0-.7.1-1.06.5-.36.4-1.38 1.35-1.38 3.3s1.42 3.83 1.62 4.1c.2.26 2.8 4.27 6.77 5.98.95.41 1.69.65 2.27.84.95.3 1.82.26 2.5.16.76-.12 2.36-.96 2.7-1.9.33-.93.33-1.73.23-1.9-.1-.16-.36-.26-.76-.46Z" fill="currentColor"/>
                   </svg>
@@ -205,9 +224,9 @@ const PRICE_KEYWORDS = ['prix', 'tarif', 'coût', 'cout', 'combien', 'gratuit'];
     :host {
       --wa-green: #25d366;
       --wa-green-dark: #1ebe5d;
-      --chat-w: 380px;
-      --chat-gap: 20px;
-      --fab-size: 56px;
+      --chat-w: 332px;
+      --chat-gap: 16px;
+      --fab-size: 46px;
     }
 
     .chat-wrap {
@@ -215,27 +234,29 @@ const PRICE_KEYWORDS = ['prix', 'tarif', 'coût', 'cout', 'combien', 'gratuit'];
       inset-inline-end: max(var(--chat-gap), env(safe-area-inset-right));
       inset-block-end: max(var(--chat-gap), env(safe-area-inset-bottom));
       z-index: 999;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: 12px;
-      max-width: calc(100vw - 2 * var(--chat-gap));
+      width: var(--fab-size);
+      height: var(--fab-size);
+      pointer-events: none; /* le conteneur ne bloque plus les clics de la page */
     }
 
     /* ── Window ───────────────────────────────────────────── */
     .chat {
+      /* hors flux : la fenêtre fermée n'occupe plus de place */
+      position: absolute;
+      inset-inline-end: 0;
+      inset-block-end: calc(var(--fab-size) + 10px);
       display: flex;
       flex-direction: column;
       width: min(var(--chat-w), calc(100vw - 2 * var(--chat-gap)));
       /* hauteur fluide : jamais plus haute que l'écran moins le FAB et les marges */
-      height: clamp(380px, 72dvh, 600px);
-      max-height: calc(100dvh - var(--fab-size) - 2 * var(--chat-gap) - 12px);
+      height: clamp(340px, 62dvh, 470px);
+      max-height: calc(100dvh - var(--fab-size) - 2 * var(--chat-gap) - 10px);
       background: #efeae2;
-      border-radius: 18px;
+      border-radius: 16px;
       box-shadow:
-        0 24px 48px -16px rgb(25 64 60 / 45%),
-        0 4px 12px rgb(0 0 0 / 10%),
-        0 0 0 1px rgb(25 64 60 / 8%);
+        0 18px 36px -14px rgb(25 64 60 / 38%),
+        0 2px 8px rgb(0 0 0 / 8%),
+        0 0 0 1px rgb(25 64 60 / 7%);
       overflow: hidden;
       opacity: 0;
       visibility: hidden;
@@ -257,11 +278,11 @@ const PRICE_KEYWORDS = ['prix', 'tarif', 'coût', 'cout', 'combien', 'gratuit'];
     .chat-header {
       display: flex;
       align-items: center;
-      gap: 11px;
+      gap: 9px;
       flex-shrink: 0;
-      padding: 12px 12px 12px 14px;
+      padding: 9px 10px 9px 12px;
       background: linear-gradient(135deg, var(--brand-teal, #19403c) 0%, var(--brand-teal-mid, #26534f) 100%);
-      border-block-end: 3px solid var(--brand-coral, #be644d);
+      border-block-end: 2px solid var(--brand-coral, #be644d);
       color: #fff;
     }
     .chat-avatar {
@@ -269,11 +290,11 @@ const PRICE_KEYWORDS = ['prix', 'tarif', 'coût', 'cout', 'combien', 'gratuit'];
       flex-shrink: 0;
       img {
         display: block;
-        width: 40px;
-        height: 40px;
+        width: 34px;
+        height: 34px;
         border-radius: 50%;
         object-fit: cover;
-        border: 2px solid rgb(255 255 255 / 65%);
+        border: 1.5px solid rgb(255 255 255 / 60%);
         background: var(--brand-teal, #19403c);
       }
     }
@@ -294,7 +315,7 @@ const PRICE_KEYWORDS = ['prix', 'tarif', 'coût', 'cout', 'combien', 'gratuit'];
       min-width: 0;
       strong {
         overflow: hidden;
-        font-size: .88rem;
+        font-size: .8rem;
         font-weight: 700;
         letter-spacing: .04em;
         text-overflow: ellipsis;
@@ -305,7 +326,7 @@ const PRICE_KEYWORDS = ['prix', 'tarif', 'coût', 'cout', 'combien', 'gratuit'];
       display: flex;
       align-items: center;
       gap: 6px;
-      font-size: .72rem;
+      font-size: .68rem;
       line-height: 1.2;
       opacity: .88;
     }
@@ -320,8 +341,8 @@ const PRICE_KEYWORDS = ['prix', 'tarif', 'coût', 'cout', 'combien', 'gratuit'];
       display: grid;
       place-items: center;
       flex-shrink: 0;
-      width: 34px;
-      height: 34px;
+      width: 28px;
+      height: 28px;
       border: 0;
       border-radius: 50%;
       background: rgb(255 255 255 / 12%);
@@ -329,7 +350,7 @@ const PRICE_KEYWORDS = ['prix', 'tarif', 'coût', 'cout', 'combien', 'gratuit'];
       cursor: pointer;
       transition: background .18s ease, transform .18s ease;
       &:hover { background: rgb(255 255 255 / 26%); transform: rotate(90deg); }
-      svg { width: 12px; height: 12px; }
+      svg { width: 10px; height: 10px; }
     }
 
     /* ── Messages ─────────────────────────────────────────── */
@@ -339,7 +360,7 @@ const PRICE_KEYWORDS = ['prix', 'tarif', 'coût', 'cout', 'combien', 'gratuit'];
       display: flex;
       flex-direction: column;
       gap: 5px;
-      padding: 14px 14px 12px;
+      padding: 12px 12px 10px;
       overflow-y: auto;
       overscroll-behavior: contain;
       scroll-padding-block-end: 12px;
@@ -369,15 +390,15 @@ const PRICE_KEYWORDS = ['prix', 'tarif', 'coût', 'cout', 'combien', 'gratuit'];
     .msg {
       position: relative;
       max-width: 82%;
-      padding: 7px 10px 5px;
-      border-radius: 12px;
+      padding: 6px 9px 4px;
+      border-radius: 11px;
       box-shadow: 0 1px 1px rgb(0 0 0 / 10%);
       animation: pop .22s ease both;
       p {
         margin: 0;
         color: #1a2e2b;
-        font-size: .86rem;
-        line-height: 1.45;
+        font-size: .8rem;
+        line-height: 1.4;
         overflow-wrap: anywhere;
       }
     }
@@ -408,17 +429,17 @@ const PRICE_KEYWORDS = ['prix', 'tarif', 'coût', 'cout', 'combien', 'gratuit'];
       align-items: center;
       justify-content: center;
       gap: 8px;
-      margin-block-start: 8px;
-      padding: 9px 14px;
+      margin-block-start: 7px;
+      padding: 7px 12px;
       border-radius: 9px;
       background: var(--wa-green);
       color: #fff;
-      font-size: .8rem;
+      font-size: .75rem;
       font-weight: 700;
       line-height: 1.2;
       text-decoration: none;
       transition: background .18s ease, transform .18s ease;
-      svg { width: 17px; height: 17px; flex-shrink: 0; }
+      svg { width: 15px; height: 15px; flex-shrink: 0; }
       &:hover { background: var(--wa-green-dark); transform: translateY(-1px); }
     }
 
@@ -448,13 +469,13 @@ const PRICE_KEYWORDS = ['prix', 'tarif', 'coût', 'cout', 'combien', 'gratuit'];
       animation: pop .25s ease both;
     }
     .chip {
-      padding: 7px 12px;
+      padding: 5px 10px;
       border: 1px solid var(--brand-teal, #19403c);
       border-radius: 999px;
       background: rgb(255 255 255 / 94%);
       color: var(--brand-teal, #19403c);
       font-family: inherit;
-      font-size: .76rem;
+      font-size: .7rem;
       font-weight: 600;
       line-height: 1.2;
       cursor: pointer;
@@ -472,26 +493,63 @@ const PRICE_KEYWORDS = ['prix', 'tarif', 'coût', 'cout', 'combien', 'gratuit'];
       &:hover { background: var(--wa-green-dark); color: #fff; }
     }
 
+    /* ── Barre épinglée (agent RH) ────────────────────────── */
+    .chat-pin {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      flex-shrink: 0;
+      padding: 7px 12px;
+      background: #fff8f4;
+      border-block-end: 1px solid rgb(190 100 77 / 22%);
+      color: #1a2e2b;
+      text-decoration: none;
+      transition: background .18s ease;
+      &:hover { background: #fdeee7; }
+      &:focus-visible { outline: 2px solid var(--brand-coral, #be644d); outline-offset: -2px; }
+    }
+    .chat-pin-icon {
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--brand-coral, #be644d);
+      color: #fff;
+      svg { width: 13px; height: 13px; }
+    }
+    .chat-pin-text {
+      flex: 1;
+      min-width: 0;
+      display: grid;
+      line-height: 1.25;
+      strong { color: var(--brand-teal, #19403c); font-size: .76rem; font-weight: 700; }
+      small { color: #667781; font-size: .66rem; }
+    }
+    .chat-pin-go { flex-shrink: 0; width: 14px; height: 14px; color: var(--brand-coral, #be644d); }
+    :host-context([dir='rtl']) .chat-pin-go { transform: scaleX(-1); }
+
     /* ── Input ────────────────────────────────────────────── */
     .chat-input {
       display: flex;
       align-items: center;
       gap: 8px;
       flex-shrink: 0;
-      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
       background: #f0f2f5;
       border-block-start: 1px solid rgb(25 64 60 / 8%);
       input {
         flex: 1;
         min-width: 0;
-        height: 40px;
-        padding: 0 16px;
+        height: 36px;
+        padding: 0 14px;
         border: 0;
         border-radius: 999px;
         background: #fff;
         color: #1a2e2b;
         font-family: inherit;
-        font-size: .875rem;
+        font-size: .82rem;
         &::placeholder { color: #8696a0; }
         &:focus-visible { outline: 2px solid var(--brand-coral, #be644d); outline-offset: 1px; }
       }
@@ -500,15 +558,15 @@ const PRICE_KEYWORDS = ['prix', 'tarif', 'coût', 'cout', 'combien', 'gratuit'];
       display: grid;
       place-items: center;
       flex-shrink: 0;
-      width: 40px;
-      height: 40px;
+      width: 36px;
+      height: 36px;
       border: 0;
       border-radius: 50%;
       background: var(--brand-teal, #19403c);
       color: #fff;
       cursor: pointer;
       transition: background .18s ease, transform .18s ease, opacity .18s ease;
-      svg { width: 18px; height: 18px; }
+      svg { width: 16px; height: 16px; }
       &:hover:not(:disabled) { background: var(--brand-coral, #be644d); transform: scale(1.06); }
       &:disabled { opacity: .4; cursor: not-allowed; }
     }
@@ -517,6 +575,7 @@ const PRICE_KEYWORDS = ['prix', 'tarif', 'coût', 'cout', 'combien', 'gratuit'];
     /* ── FAB ──────────────────────────────────────────────── */
     .fab {
       position: relative;
+      pointer-events: auto;
       display: grid;
       place-items: center;
       flex-shrink: 0;
@@ -527,21 +586,21 @@ const PRICE_KEYWORDS = ['prix', 'tarif', 'coût', 'cout', 'combien', 'gratuit'];
       background: var(--wa-green);
       color: #fff;
       cursor: pointer;
-      box-shadow: 0 4px 16px rgb(37 211 102 / 45%);
+      box-shadow: 0 3px 12px rgb(37 211 102 / 38%), 0 1px 3px rgb(0 0 0 / 12%);
       transition: background .2s ease, transform .2s ease, box-shadow .2s ease;
       &:hover {
         background: var(--wa-green-dark);
-        transform: scale(1.07);
-        box-shadow: 0 6px 22px rgb(37 211 102 / 55%);
+        transform: scale(1.05);
+        box-shadow: 0 5px 18px rgb(37 211 102 / 48%), 0 1px 3px rgb(0 0 0 / 12%);
       }
     }
-    .fab-icon { width: 28px; height: 28px; }
-    .fab-close { width: 17px; height: 17px; }
+    .fab-icon { width: 24px; height: 24px; }
+    .fab-close { width: 14px; height: 14px; }
     .fab-pulse {
       position: absolute;
-      inset: -4px;
+      inset: -3px;
       border-radius: 50%;
-      border: 2px solid var(--wa-green);
+      border: 1.5px solid var(--wa-green);
       opacity: 0;
       animation: pulse 2.4s ease infinite;
     }
@@ -551,14 +610,14 @@ const PRICE_KEYWORDS = ['prix', 'tarif', 'coût', 'cout', 'combien', 'gratuit'];
       inset-inline-end: -3px;
       display: grid;
       place-items: center;
-      min-width: 20px;
-      height: 20px;
-      padding-inline: 5px;
+      min-width: 16px;
+      height: 16px;
+      padding-inline: 4px;
       border: 2px solid #fff;
       border-radius: 999px;
       background: var(--brand-coral, #be644d);
       color: #fff;
-      font-size: .66rem;
+      font-size: .58rem;
       font-weight: 700;
       line-height: 1;
     }
@@ -584,13 +643,14 @@ const PRICE_KEYWORDS = ['prix', 'tarif', 'coût', 'cout', 'combien', 'gratuit'];
 
     /* ── Responsive ───────────────────────────────────────── */
     @media (max-width: 480px) {
-      :host { --chat-gap: 12px; --fab-size: 52px; }
+      :host { --chat-gap: 12px; --fab-size: 44px; }
       .chat {
         width: calc(100vw - 2 * var(--chat-gap));
-        height: min(78dvh, 620px);
+        height: min(74dvh, 540px);
+        inset-block-end: 0; /* le FAB est masqué à l'ouverture */
         /* la fenêtre peut occuper presque tout l'écran : on masque le FAB, la croix est dans l'en-tête */
         max-height: calc(100dvh - 2 * var(--chat-gap));
-        border-radius: 16px;
+        border-radius: 14px;
       }
       .is-open .fab { display: none; }
       .chat-body { padding: 12px 12px 10px; }
@@ -599,9 +659,9 @@ const PRICE_KEYWORDS = ['prix', 'tarif', 'coût', 'cout', 'combien', 'gratuit'];
       .chat-input input { font-size: 1rem; }
     }
     @media (max-height: 560px) {
-      .chat { height: calc(100dvh - var(--fab-size) - 2 * var(--chat-gap) - 12px); min-height: 0; }
+      .chat { height: calc(100dvh - var(--fab-size) - 2 * var(--chat-gap) - 10px); min-height: 0; }
       .chat-header { padding-block: 8px; }
-      .chat-avatar img { width: 34px; height: 34px; }
+      .chat-avatar img { width: 30px; height: 30px; }
     }
     @media (prefers-reduced-motion: reduce) {
       .chat, .msg, .chips { transition: none; animation: none; }
@@ -618,6 +678,7 @@ export class WhatsappFabComponent {
 
   readonly topics = TOPICS;
   readonly agentLabel = AGENT_LABEL;
+  readonly hrLabel = HR_LABEL;
   readonly typingLabel = 'écrit…';
 
   readonly open = signal(false);
@@ -634,6 +695,11 @@ export class WhatsappFabComponent {
 
   constructor() {
     this.destroyRef.onDestroy(() => this.timers.forEach(clearTimeout));
+  }
+
+  /** Lien direct vers l'agent RH. */
+  get hrUrl(): string {
+    return `https://wa.me/${WA_HR_NUMBER}?text=${encodeURIComponent(HR_GREETING)}`;
   }
 
   get waUrl(): string {
@@ -670,6 +736,12 @@ export class WhatsappFabComponent {
     this.say(topic.answer, () => this.showChips.set(true), true);
   }
 
+  /** Clic sur « Agent RH » : WhatsApp s'ouvre directement, on garde une trace dans le chat. */
+  onHrClick(): void {
+    this.push('user', HR_LABEL);
+    this.push('bot', 'Vous êtes redirigé vers notre équipe RH sur WhatsApp 👔 Besoin d’autre chose ?');
+  }
+
   pickAgent(): void {
     if (this.typing()) return;
     this.userSays(AGENT_LABEL);
@@ -686,6 +758,10 @@ export class WhatsappFabComponent {
     const q = text.toLowerCase();
     const has = (words: string[]) => words.some((w) => q.includes(w));
 
+    if (HR_PATTERN.test(text)) {
+      this.hrHandoff();
+      return;
+    }
     if (has(AGENT_KEYWORDS)) {
       this.handoff();
       return;
@@ -716,6 +792,15 @@ export class WhatsappFabComponent {
 
   /* ── Internals ───────────────────────────────────────────── */
 
+  private hrHandoff(): void {
+    this.say(
+      ['Notre équipe RH répond directement sur WhatsApp pour le recrutement et les candidatures 👔'],
+      () => this.showChips.set(true),
+      true,
+      this.hrUrl,
+    );
+  }
+
   private handoff(): void {
     this.say(
       ['Avec plaisir ! Cliquez ci-dessous pour poursuivre la conversation sur WhatsApp avec un conseiller.'],
@@ -731,7 +816,7 @@ export class WhatsappFabComponent {
   }
 
   /** Affiche les messages du bot l'un après l'autre avec l'indicateur « écrit… ». */
-  private say(texts: string[], done?: () => void, ctaOnLast = false): void {
+  private say(texts: string[], done?: () => void, ctaOnLast = false, href?: string): void {
     this.showChips.set(false);
     let i = 0;
     const next = () => {
@@ -745,7 +830,7 @@ export class WhatsappFabComponent {
       this.typing.set(true);
       this.scrollDown();
       this.later(() => {
-        this.push('bot', text, ctaOnLast && i === texts.length - 1);
+        this.push('bot', text, ctaOnLast && i === texts.length - 1, href);
         i++;
         next();
       }, Math.min(1800, 650 + text.length * 16));
@@ -753,9 +838,9 @@ export class WhatsappFabComponent {
     next();
   }
 
-  private push(from: 'bot' | 'user', text: string, cta = false): void {
+  private push(from: 'bot' | 'user', text: string, cta = false, href?: string): void {
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    this.messages.update((list) => [...list, { id: this.nextId++, from, text, time, cta }]);
+    this.messages.update((list) => [...list, { id: this.nextId++, from, text, time, cta, href }]);
     this.scrollDown();
   }
 

@@ -90,14 +90,6 @@
         </div>
 
         <div class="footer-contact-actions">
-          <button type="button" class="footer-trace" (click)="openMap(true)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="6" cy="18" r="2.2"/>
-              <circle cx="18" cy="6" r="2.2"/>
-              <path d="M8 18h6a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h5"/>
-            </svg>
-            <span>{{ copy['footer.trace'] || 'Tracer l’itinéraire' }}</span>
-          </button>
           <a class="footer-cta" routerLink="/pre-registration">
             <span>{{ copy['footer.cta'] }}</span>
             <svg viewBox="0 0 20 20" aria-hidden="true">
@@ -114,90 +106,24 @@
       <span class="footer-region" aria-hidden="true">
         <span></span><span></span><span></span>
       </span>
+      <button type="button" class="footer-top" (click)="scrollToTop()"
+              [attr.aria-label]="copy['footer.backToTop'] || 'Retour en haut'">
+        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 16V4M4.5 9.5 10 4l5.5 5.5"/></svg>
+      </button>
     </div>
   </div>
 
-  <!-- Modal carte + itinéraire -->
-  <dialog #dialog class="map-dialog" aria-labelledby="map-modal-title"
+  <!-- Modal carte : plein cadre, sans bouton ni en-tête (Échap ou clic sur le fond pour fermer) -->
+  <dialog #dialog class="map-dialog" tabindex="-1" aria-label="Carte ATHIR CONNECT"
           (click)="onDialogClick($event)" (close)="onNativeClose()">
     @if (mapOpen) {
-      <div class="map-dialog-inner">
-
-        <header class="map-dialog-head">
-          <div>
-            <h3 id="map-modal-title">{{ copy['footer.location'] || 'Notre localisation' }}</h3>
-            <p>{{ copy['footer.address'] || 'Av. des Martyrs, El Mourouj' }}</p>
-          </div>
-          <button #closeBtn type="button" class="map-close" (click)="closeMap()"
-                  [attr.aria-label]="copy['footer.close'] || 'Fermer'">
-            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true">
-              <path d="M5 5l10 10M15 5L5 15"/>
-            </svg>
-          </button>
-        </header>
-
-        <div class="map-dialog-body">
-          <div class="map-frame-wrap">
-            <iframe [src]="mapUrl"
-                    title="Google Maps - ATHIR CONNECT"
-                    allowfullscreen
-                    referrerpolicy="no-referrer-when-downgrade"></iframe>
-          </div>
-
-          <aside class="map-controls">
-            <span class="map-controls-label">{{ copy['footer.travelMode'] || 'Mode de déplacement' }}</span>
-            <div class="map-modes" role="radiogroup" [attr.aria-label]="copy['footer.travelMode'] || 'Mode de déplacement'">
-              @for (opt of travelOptions; track opt.mode) {
-                <button type="button" class="mode-chip" role="radio"
-                        [attr.aria-checked]="travelMode === opt.mode"
-                        [class.is-active]="travelMode === opt.mode"
-                        (click)="setMode(opt.mode)">
-                  {{ copy[opt.key] || opt.fallback }}
-                </button>
-              }
-            </div>
-
-            <button type="button" class="map-btn map-btn--primary" (click)="traceFromMyLocation()"
-                    [disabled]="locating" [attr.aria-busy]="locating">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <circle cx="12" cy="12" r="3"/>
-                <circle cx="12" cy="12" r="8"/>
-                <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
-              </svg>
-              <span>{{ locating ? (copy['footer.locating'] || 'Détection en cours…') : (copy['footer.traceMine'] || 'Tracer depuis ma position') }}</span>
-            </button>
-
-            <div class="map-or" aria-hidden="true"><span>{{ copy['footer.or'] || 'ou' }}</span></div>
-
-            <form class="map-form" (submit)="$event.preventDefault(); traceFromAddress(fromInput.value)">
-              <label class="visually-hidden" for="footer-from">{{ copy['footer.fromAddress'] || 'Adresse de départ' }}</label>
-              <input #fromInput id="footer-from" type="text" autocomplete="street-address"
-                     [placeholder]="copy['footer.fromAddress'] || 'Adresse de départ'">
-              <button type="submit" class="map-go" [attr.aria-label]="copy['footer.go'] || 'Tracer'">
-                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M4 10h11M10 4l6 6-6 6"/>
-                </svg>
-              </button>
-            </form>
-
-            <p class="map-status" [class.is-error]="statusIsError" role="status" aria-live="polite">{{ status }}</p>
-
-            <div class="map-actions">
-              <a class="map-btn map-btn--ghost" [href]="externalUrl" target="_blank" rel="noopener noreferrer">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>
-                </svg>
-                <span>{{ copy['footer.openMap'] || 'Ouvrir dans Google Maps' }}</span>
-              </a>
-              @if (hasRoute) {
-                <button type="button" class="map-reset" (click)="resetRoute(); fromInput.value = ''">
-                  {{ copy['footer.resetRoute'] || 'Réinitialiser' }}
-                </button>
-              }
-            </div>
-          </aside>
-        </div>
-      </div>
+      <iframe [src]="mapUrl"
+              title="Google Maps - ATHIR CONNECT"
+              allowfullscreen
+              referrerpolicy="no-referrer-when-downgrade"></iframe>
+      @if (status) {
+        <p class="map-status" [class.is-error]="statusIsError" role="status" aria-live="polite">{{ status }}</p>
+      }
     }
   </dialog>
 </footer>

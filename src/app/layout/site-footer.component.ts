@@ -38,7 +38,6 @@ export class SiteFooterComponent implements OnInit, OnChanges, OnDestroy {
   @Input() copy: Record<string, string> = {};
   @Input() language = 'fr';
 
-  @ViewChild('closeBtn') private closeBtn?: ElementRef<HTMLButtonElement>;
   @ViewChild('dialog', { static: true }) private dialog!: ElementRef<HTMLDialogElement>;
 
   private readonly sanitizer = inject(DomSanitizer);
@@ -80,7 +79,6 @@ export class SiteFooterComponent implements OnInit, OnChanges, OnDestroy {
   mapUrl!: SafeResourceUrl;
 
   private lastFocused: HTMLElement | null = null;
-  private previousOverflow = '';
 
   get direction(): 'rtl' | 'ltr' {
     return this.language === 'ar' ? 'rtl' : 'ltr';
@@ -115,22 +113,19 @@ export class SiteFooterComponent implements OnInit, OnChanges, OnDestroy {
     this.unlockScroll();
   }
 
-  /** Ouvre la carte en modal ; avec autoLocate, détecte la position et trace l'itinéraire. */
-  openMap(autoLocate = false): void {
+  openMap(): void {
     const el = this.dialog.nativeElement;
     if (!this.mapOpen) {
       this.lastFocused = this.document.activeElement as HTMLElement | null;
       this.mapOpen = true;
       this.lockScroll();
     }
-    // <dialog> natif : s'affiche dans la « top layer », au-dessus de tout (pas de souci de z-index)
     if (!el.open) {
       el.showModal();
     }
-    if (autoLocate) {
-      this.traceFromMyLocation();
-    }
-    setTimeout(() => this.closeBtn?.nativeElement.focus());
+    this.traceFromMyLocation();
+    // le focus reste sur le <dialog> : la touche Échap continue de le fermer
+    setTimeout(() => el.focus());
   }
 
   closeMap(): void {
@@ -152,6 +147,11 @@ export class SiteFooterComponent implements OnInit, OnChanges, OnDestroy {
     if (event.target === this.dialog.nativeElement) {
       this.closeMap();
     }
+  }
+
+  scrollToTop(): void {
+    if (typeof window === 'undefined') return;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   setMode(mode: TravelMode): void {
@@ -220,12 +220,21 @@ export class SiteFooterComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private lockScroll(): void {
-    this.previousOverflow = this.document.body.style.overflow;
-    this.document.body.style.overflow = 'hidden';
+    if (typeof window === 'undefined') return;
+    this.document.body.dataset['scrollY'] = String(window.scrollY);
+    this.document.body.style.position = 'fixed';
+    this.document.body.style.top = `-${window.scrollY}px`;
+    this.document.body.style.width = '100%';
   }
 
   private unlockScroll(): void {
-    this.document.body.style.overflow = this.previousOverflow;
+    if (typeof window === 'undefined') return;
+    const scrollY = parseInt(this.document.body.dataset['scrollY'] || '0', 10);
+    this.document.body.style.position = '';
+    this.document.body.style.top = '';
+    this.document.body.style.width = '';
+    window.scrollTo({ top: scrollY, behavior: 'instant' as ScrollBehavior });
+    delete this.document.body.dataset['scrollY'];
   }
 
   private updateMaps(): void {

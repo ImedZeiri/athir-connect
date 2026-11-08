@@ -15,18 +15,18 @@ import { WhatsappMessageService } from '../../core/services/whatsapp-message.ser
         <label class="form-field">
           <span>{{ i18n.t('form.name') }} <b aria-hidden="true">*</b></span>
           <input [(ngModel)]="request.name" name="name" type="text" autocomplete="name" required minlength="2"
-            [attr.aria-invalid]="inquiryForm.submitted && inquiryForm.controls['name']?.invalid"
+            [attr.aria-invalid]="inquiryForm.submitted && inquiryForm.controls['name'].invalid"
             [placeholder]="i18n.t('form.name')">
-          @if (inquiryForm.submitted && inquiryForm.controls['name']?.invalid) {
+          @if (inquiryForm.submitted && inquiryForm.controls['name'].invalid) {
             <small class="field-error">{{ i18n.t('form.required') }}</small>
           }
         </label>
         <label class="form-field">
           <span>{{ i18n.t('form.email') }} <b aria-hidden="true">*</b></span>
           <input [(ngModel)]="request.email" name="email" type="email" autocomplete="email" required email
-            [attr.aria-invalid]="inquiryForm.submitted && inquiryForm.controls['email']?.invalid"
+            [attr.aria-invalid]="inquiryForm.submitted && inquiryForm.controls['email'].invalid"
             [placeholder]="i18n.t('form.email')">
-          @if (inquiryForm.submitted && inquiryForm.controls['email']?.invalid) {
+          @if (inquiryForm.submitted && inquiryForm.controls['email'].invalid) {
             <small class="field-error">{{ i18n.t('form.invalidEmail') }}</small>
           }
         </label>
@@ -41,13 +41,13 @@ import { WhatsappMessageService } from '../../core/services/whatsapp-message.ser
         <label class="form-field">
           <span>{{ i18n.t('form.service') }} <b aria-hidden="true">*</b></span>
           <select [(ngModel)]="request.service" name="service" required
-            [attr.aria-invalid]="inquiryForm.submitted && inquiryForm.controls['service']?.invalid">
+            [attr.aria-invalid]="inquiryForm.submitted && inquiryForm.controls['service'].invalid">
             <option value="" disabled>{{ i18n.t('form.servicePlaceholder') }}</option>
             @for (service of services; track service.id) {
               <option [value]="service.id">{{ i18n.t(service.translationKey + '.title') }}</option>
             }
           </select>
-          @if (inquiryForm.submitted && inquiryForm.controls['service']?.invalid) {
+          @if (inquiryForm.submitted && inquiryForm.controls['service'].invalid) {
             <small class="field-error">{{ i18n.t('form.required') }}</small>
           }
         </label>
@@ -66,9 +66,9 @@ import { WhatsappMessageService } from '../../core/services/whatsapp-message.ser
       <label class="form-field">
         <span>{{ i18n.t('form.message') }} <b aria-hidden="true">*</b></span>
         <textarea [(ngModel)]="request.message" name="message" required minlength="10" rows="5"
-          [attr.aria-invalid]="inquiryForm.submitted && inquiryForm.controls['message']?.invalid"
+          [attr.aria-invalid]="inquiryForm.submitted && inquiryForm.controls['message'].invalid"
           [placeholder]="i18n.t('form.messagePlaceholder')"></textarea>
-        @if (inquiryForm.submitted && inquiryForm.controls['message']?.invalid) {
+        @if (inquiryForm.submitted && inquiryForm.controls['message'].invalid) {
           <small class="field-error">{{ i18n.t('form.required') }}</small>
         }
       </label>
@@ -79,8 +79,16 @@ import { WhatsappMessageService } from '../../core/services/whatsapp-message.ser
 
       @if (whatsappUrl) {
         <div class="form-confirmation" role="status" aria-live="polite">
-          <p>{{ i18n.t('form.whatsappReady') }}</p>
-          <a class="button button-whatsapp" [href]="whatsappUrl" target="_blank" rel="noopener noreferrer">
+          <div class="form-confirmation-top">
+            <span class="form-confirmation-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.52 3.48A11.93 11.93 0 0 0 12 0C5.37 0 0 5.37 0 12c0 2.11.55 4.16 1.6 5.97L0 24l6.18-1.57A11.94 11.94 0 0 0 12 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.22-3.48-8.52zM12 22c-1.85 0-3.66-.5-5.24-1.44l-.37-.22-3.87.99 1.02-3.76-.24-.38A9.94 9.94 0 0 1 2 12C2 6.48 6.48 2 12 2c2.67 0 5.18 1.04 7.07 2.93A9.93 9.93 0 0 1 22 12c0 5.52-4.48 10-10 10zm5.47-7.4c-.3-.15-1.77-.87-2.04-.97-.28-.1-.48-.15-.68.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.47-.89-.79-1.48-1.76-1.66-2.06-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.68-1.63-.93-2.23-.24-.58-.49-.5-.68-.51H6.9c-.17 0-.45.06-.69.3-.23.23-.9.88-.9 2.14s.92 2.48 1.05 2.65c.13.17 1.82 2.78 4.41 3.9.62.27 1.1.43 1.47.55.62.2 1.18.17 1.63.1.5-.07 1.53-.62 1.75-1.23.22-.6.22-1.12.15-1.23-.07-.1-.27-.17-.57-.32z"/></svg>
+            </span>
+            <p>{{ i18n.t('form.whatsappReady') }}</p>
+            <button type="button" class="form-confirmation-close" (click)="whatsappUrl = ''" aria-label="Fermer">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 5l10 10M15 5L5 15"/></svg>
+            </button>
+          </div>
+          <a class="button-whatsapp" [href]="whatsappUrl" target="_blank" rel="noopener noreferrer">
             {{ i18n.t('form.whatsapp') }} <span aria-hidden="true">↗</span>
           </a>
           <small>{{ i18n.t('form.whatsappNote') }}</small>
@@ -100,10 +108,86 @@ import { WhatsappMessageService } from '../../core/services/whatsapp-message.ser
     .form-field [aria-invalid="true"] { border-color: #a63e32; }
     .field-error { color: #a63e32; font-size: .78rem; font-weight: 500; }
     .form-submit { justify-self: start; border: 0; cursor: pointer; font-family: inherit; }
-    .form-confirmation { display: grid; gap: 12px; padding: 19px; border-inline-start: 3px solid var(--brand-teal); background: var(--surface-soft); }
-    .form-confirmation p { margin: 0; color: var(--brand-teal); line-height: 1.65; }
-    .form-confirmation small { color: var(--ink-muted); line-height: 1.6; }
-    .button-whatsapp { justify-self: start; background: #236a53; }
+    .form-confirmation {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: grid;
+      gap: 10px;
+      width: 300px;
+      padding: 14px 16px;
+      background: #fff;
+      border-radius: 14px;
+      border: 1px solid #d4e8d4;
+      box-shadow: 0 8px 32px -8px rgb(0 0 0 / 22%), 0 2px 8px -2px rgb(0 0 0 / 10%);
+      animation: toast-in .28s cubic-bezier(.22,.61,.36,1);
+    }
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(12px) scale(.97); }
+    }
+    .form-confirmation-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .form-confirmation-icon {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      background: #e8f5e9;
+      color: #25d366;
+      svg { width: 15px; height: 15px; }
+    }
+    .form-confirmation-top p {
+      flex: 1;
+      margin: 0;
+      color: var(--ink);
+      font-size: .8rem;
+      font-weight: 600;
+      line-height: 1.5;
+      padding-top: 4px;
+    }
+    .form-confirmation-close {
+      display: grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      flex-shrink: 0;
+      border: 1px solid var(--line);
+      border-radius: 50%;
+      background: transparent;
+      color: var(--ink-muted);
+      cursor: pointer;
+      transition: background .15s ease, color .15s ease;
+      svg { width: 9px; height: 9px; }
+      &:hover { background: var(--line); color: var(--ink); }
+    }
+    .button-whatsapp {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      min-height: 38px;
+      padding: 0 14px;
+      border-radius: 10px;
+      background: #25d366;
+      color: #fff;
+      font: 700 .8rem/1 var(--font-body);
+      text-decoration: none;
+      letter-spacing: .02em;
+      transition: background .18s ease, transform .18s ease;
+      &:hover { background: #1ebe5d; transform: translateY(-1px); }
+    }
+    .form-confirmation small {
+      color: var(--ink-muted);
+      font-size: .72rem;
+      line-height: 1.5;
+    }
     @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } .form-submit, .button-whatsapp { width: 100%; justify-content: center; } }
   `]
 })
