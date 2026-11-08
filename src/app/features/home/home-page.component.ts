@@ -1,4 +1,11 @@
-import { AfterViewInit, Component, computed, signal } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  ViewChild,
+  computed,
+  signal,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FEATURED_SERVICES } from '../../core/data/service-catalog';
 import { I18nService } from '../../core/services/i18n.service';
@@ -16,6 +23,8 @@ interface VideoItem {
   title: string;
   caption: string;
   thumb: string;
+  /** Fichier local (mp4/webm) : lecture automatique en boucle, sans YouTube. */
+  src?: string;
 }
 
 interface Review {
@@ -190,9 +199,9 @@ interface Stat {
       </div>
     </section>
 
-    <!-- ── Video Section ──────────────────────────────────────── -->
-    <section class="video-section section-pad reveal">
-      <div class="page-shell">
+    <!-- ── Video wall : plein écran, sans marge entre les vidéos ── -->
+    <section class="video-section reveal">
+      <div class="page-shell video-head">
         <div class="video-header">
           <p class="eyebrow">
             <span class="eyebrow-rule"></span>{{ i18n.t('home.video.eyebrow') }}
@@ -200,60 +209,84 @@ interface Stat {
           <h2>{{ i18n.t('home.video.title') }}</h2>
           <p class="video-lead">{{ i18n.t('home.video.lead') }}</p>
         </div>
+      </div>
 
-        <div class="video-grid">
-          @for (video of videoItems; track video.id) {
-            <div class="video-card">
-              @if (activeVideo() === video.id) {
-                <div class="video-embed-wrap">
+      <div class="video-wall" #videoWall>
+        @for (video of videoItems; track video.id; let i = $index) {
+          <article class="video-panel" [class.is-focus]="activeVideo() === video.id">
+            @if (video.src) {
+              <!-- Fichier local : s'affiche en boucle, un clic active/coupe le son -->
+              <video
+                class="video-media"
+                [src]="video.src"
+                [poster]="video.thumb"
+                [autoplay]="!reduceMotion"
+                [muted]="true"
+                loop
+                playsinline
+                preload="metadata"
+                [attr.aria-label]="video.title"
+                (click)="toggleSound($event)"
+              ></video>
+            } @else if (activeVideo() === video.id) {
+              <!-- Lecture avec son et commandes -->
+              <iframe
+                class="video-frame"
+                [src]="focusUrl(video.id) | safeUrl"
+                [title]="video.title"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowfullscreen
+              ></iframe>
+              <button
+                class="video-stop"
+                type="button"
+                aria-label="Fermer la lecture"
+                (click)="stopVideo()"
+              >
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15"/></svg>
+              </button>
+            } @else {
+              <img
+                class="video-media video-poster"
+                [src]="video.thumb"
+                alt=""
+                loading="lazy"
+                decoding="async"
+                (load)="fixThumb($event, video.id)"
+                (error)="fixThumb($event, video.id)"
+              />
+              @if (wallVisible()) {
+                <!-- Aperçu muet en boucle, mis en place dès que la section est visible -->
+                <div class="video-preview" aria-hidden="true">
                   <iframe
-                    [src]="
-                      'https://www.youtube.com/embed/' +
-                        video.id +
-                        '?autoplay=1&rel=0' | safeUrl
-                    "
-                    [title]="video.title"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowfullscreen
-                    loading="lazy"
+                    [src]="previewUrl(video.id) | safeUrl"
+                    tabindex="-1"
+                    title=""
+                    allow="autoplay; encrypted-media"
                   ></iframe>
                 </div>
-              } @else {
-                <button
-                  class="video-thumb-btn"
-                  type="button"
-                  [attr.aria-label]="'Lire : ' + video.title"
-                  (click)="playVideo(video.id)"
-                >
-                  <img
-                    [src]="video.thumb"
-                    [alt]="video.title"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <span class="video-play-overlay" aria-hidden="true">
-                    <span class="video-play-ring">
-                      <svg viewBox="0 0 48 48" fill="none">
-                        <circle
-                          cx="24"
-                          cy="24"
-                          r="23"
-                          stroke="currentColor"
-                          stroke-width="1.5"
-                        />
-                        <path d="M20 16l14 8-14 8V16z" fill="currentColor" />
-                      </svg>
-                    </span>
-                  </span>
-                </button>
               }
-              <div class="video-meta">
-                <h3>{{ video.title }}</h3>
-                <p>{{ video.caption }}</p>
-              </div>
+              <button
+                class="video-hit"
+                type="button"
+                [attr.aria-label]="'Lire : ' + video.title"
+                (click)="playVideo(video.id)"
+              >
+                <span class="video-play-ring">
+                  <svg viewBox="0 0 48 48" fill="none" aria-hidden="true">
+                    <circle cx="24" cy="24" r="23" stroke="currentColor" stroke-width="1.5" />
+                    <path d="M20 16l14 8-14 8V16z" fill="currentColor" />
+                  </svg>
+                </span>
+              </button>
+            }
+            <div class="video-meta">
+              <span class="video-index">0{{ i + 1 }}</span>
+              <h3>{{ video.title }}</h3>
+              <p>{{ video.caption }}</p>
             </div>
-          }
-        </div>
+          </article>
+        }
       </div>
     </section>
 
@@ -286,32 +319,35 @@ interface Stat {
 
     <!-- ── Reviews ───────────────────────────────────────────────── -->
     <section class="reviews-section reveal">
-      <div class="reviews-bg-strip" aria-hidden="true"></div>
       <div class="page-shell reviews-inner">
         <div class="reviews-header">
-          <p class="eyebrow reviews-eyebrow">
-            <span class="eyebrow-rule"></span
-            >{{ i18n.t('home.reviews.eyebrow') }}
-          </p>
-          <h2 class="reviews-title">{{ i18n.t('home.reviews.title') }}</h2>
-          <p class="reviews-lead">{{ i18n.t('home.reviews.lead') }}</p>
+          <div class="reviews-heading">
+            <p class="eyebrow reviews-eyebrow">
+              <span class="eyebrow-rule"></span
+              >{{ i18n.t('home.reviews.eyebrow') }}
+            </p>
+            <h2 class="reviews-title">{{ i18n.t('home.reviews.title') }}</h2>
+            <p class="reviews-lead">{{ i18n.t('home.reviews.lead') }}</p>
+          </div>
           <div class="reviews-aggregate">
-            <div class="agg-stars">
-              @for (s of starsArray(5); track $index) {
-                <span class="star filled">&#9733;</span>
-              }
-            </div>
             <span class="agg-score">4.9</span>
-            <span class="agg-count">({{ reviews.length * 80 }}+ avis)</span>
+            <div class="agg-meta">
+              <div class="agg-stars">
+                @for (s of starsArray(5); track $index) {
+                  <span class="star filled">&#9733;</span>
+                }
+              </div>
+              <span class="agg-count">{{ reviews.length * 80 }}+ avis</span>
+            </div>
           </div>
         </div>
 
         <div class="reviews-main">
-          <!-- Avis sélectionné — toujours en haut, dans le bloc vert -->
-          <div class="review-featured-wrap" #featuredAnchor aria-live="polite">
+          <!-- Avis sélectionné -->
+          <div class="review-featured-wrap" aria-live="polite">
             @for (featured of [selectedReview()]; track featured.name) {
-              <article class="review-card review-featured">
-                <div class="review-card-top">
+              <article class="review-featured">
+                <header class="review-head">
                   <div class="review-avatar-wrap">
                     <img
                       class="review-avatar"
@@ -325,81 +361,58 @@ interface Stat {
                   <div class="review-author-info">
                     <strong>{{ featured.name }}</strong>
                     <span class="review-country">{{ featured.country }}</span>
-                    <div
-                      class="review-stars"
-                      [attr.aria-label]="featured.rating + ' étoiles sur 5'"
-                    >
-                      @for (s of starsArray(featured.rating); track $index) {
-                        <span class="star" [class.filled]="s">&#9733;</span>
-                      }
-                    </div>
                   </div>
-                  <span class="review-service-badge">{{
-                    featured.service
-                  }}</span>
-                </div>
+                  <div
+                    class="review-stars"
+                    [attr.aria-label]="featured.rating + ' étoiles sur 5'"
+                  >
+                    @for (s of starsArray(featured.rating); track $index) {
+                      <span class="star" [class.filled]="s">&#9733;</span>
+                    }
+                  </div>
+                </header>
                 <blockquote class="review-text">
-                  <span class="review-quote" aria-hidden="true">&ldquo;</span>
                   <p>{{ featured.text }}</p>
                 </blockquote>
+                <footer class="review-foot">
+                  <span class="review-service-badge">{{ featured.service }}</span>
+                  <span class="review-counter"
+                    >{{ selectedIndex() + 1 }} / {{ reviews.length }}</span
+                  >
+                </footer>
               </article>
             }
           </div>
 
-          <!-- Les autres avis — cliquer pour les afficher en haut -->
-          <div class="reviews-grid">
-            @for (item of otherReviews(); track item.review.name) {
-              <article
-                class="review-card review-selectable"
-                role="button"
-                tabindex="0"
-                [attr.aria-label]="
-                  'Afficher en haut l’avis de ' + item.review.name
-                "
-                (click)="selectReview(item.index, featuredAnchor)"
-                (keydown.enter)="selectReview(item.index, featuredAnchor)"
-                (keydown.space)="
-                  $event.preventDefault();
-                  selectReview(item.index, featuredAnchor)
-                "
+          <!-- Sélecteur compact : tous les avis, un clic pour afficher -->
+          <div class="review-tabs" role="group" aria-label="Choisir un avis">
+            @for (review of reviews; track review.name; let i = $index) {
+              <button
+                type="button"
+                class="review-tab"
+                [class.is-active]="i === selectedIndex()"
+                [attr.aria-current]="i === selectedIndex() ? 'true' : null"
+                [attr.aria-label]="'Afficher l’avis de ' + review.name"
+                (click)="selectReview(i)"
               >
-                <div class="review-card-top">
-                  <div class="review-avatar-wrap">
-                    <img
-                      class="review-avatar"
-                      [src]="item.review.avatar"
-                      [alt]="item.review.name"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                    <span class="review-flag">{{ item.review.flag }}</span>
-                  </div>
-                  <div class="review-author-info">
-                    <strong>{{ item.review.name }}</strong>
-                    <span class="review-country">{{
-                      item.review.country
-                    }}</span>
-                    <div
-                      class="review-stars"
-                      [attr.aria-label]="item.review.rating + ' étoiles sur 5'"
-                    >
-                      @for (s of starsArray(item.review.rating); track $index) {
-                        <span class="star" [class.filled]="s">&#9733;</span>
-                      }
-                    </div>
-                  </div>
-                  <span class="review-service-badge">{{
-                    item.review.service
-                  }}</span>
-                </div>
-                <blockquote class="review-text">
-                  <span class="review-quote" aria-hidden="true">&ldquo;</span>
-                  <p>{{ item.review.text }}</p>
-                </blockquote>
-                <span class="review-select-hint" aria-hidden="true"
-                  >Afficher en haut ↑</span
+                <span class="review-avatar-wrap">
+                  <img
+                    class="review-avatar"
+                    [src]="review.avatar"
+                    [alt]="''"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <span class="review-flag">{{ review.flag }}</span>
+                </span>
+                <span class="review-tab-info">
+                  <strong>{{ review.name }}</strong>
+                  <span>{{ review.service }}</span>
+                </span>
+                <span class="review-tab-rating"
+                  >{{ review.rating }}<i aria-hidden="true">&#9733;</i></span
                 >
-              </article>
+              </button>
             }
           </div>
         </div>
@@ -622,14 +635,16 @@ interface Stat {
         }
       }
 
-      /* ── Video ───────────────────────────────────────────────── */
+      /* ── Video wall (plein écran, sans espace entre les vidéos) ── */
       .video-section {
         background: var(--paper);
         border-top: 1px solid var(--line);
       }
+      .video-head {
+        padding-block: clamp(48px, 7vw, 96px) clamp(28px, 4vw, 48px);
+      }
       .video-header {
         max-width: 680px;
-        margin-bottom: var(--space-block);
         h2 {
           margin: 8px 0 12px;
         }
@@ -639,112 +654,197 @@ interface Stat {
         line-height: 1.7;
       }
 
-      .video-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
+      .video-wall {
+        display: flex;
+        gap: 0px;
+        width: min(100% - 0px);
+        margin-inline: auto;
+        margin-bottom: clamp(48px, 6vw, 88px);
+        height: clamp(300px, 52svh, 520px);
+        background: transparent;
       }
 
-      .video-card {
-        display: flex;
-        flex-direction: column;
-        border: 1px solid var(--line);
+      .video-panel {
+        position: relative;
         overflow: hidden;
-        background: var(--surface);
-        transition:
-          box-shadow 0.25s ease,
-          border-color 0.25s ease;
-        &:hover {
-          box-shadow: var(--shadow-soft);
-          border-color: var(--brand-coral);
+        isolation: isolate;
+        flex: 1 1 0;
+        min-width: 0;
+        transition: flex-grow 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+        background: linear-gradient(160deg, var(--brand-teal), #0b1f1d);
+
+        /* dégradé de lisibilité : bas pour le texte, léger voile en haut */
+        &::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          z-index: 1;
+          pointer-events: none;
+          background:
+            linear-gradient(
+              to top,
+              rgb(9 26 24 / 82%) 0%,
+              rgb(9 26 24 / 28%) 42%,
+              transparent 70%
+            ),
+            linear-gradient(to bottom, rgb(9 26 24 / 35%), transparent 22%);
+        }
+        &.is-focus::after {
+          display: none;
         }
       }
 
-      .video-thumb-btn {
-        position: relative;
-        display: block;
+      .video-media,
+      .video-preview {
+        position: absolute;
+        inset: 0;
         width: 100%;
-        aspect-ratio: 16 / 9;
-        padding: 0;
-        border: 0;
-        background: var(--brand-teal);
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: opacity 0.4s ease;
+      }
+      /* la vidéo en lecture s'élargit, les autres se réduisent */
+      .video-wall:has(.is-focus) .video-panel {
+        flex-grow: 0.6;
+      }
+      .video-wall:has(.is-focus) .video-panel.is-focus {
+        flex-grow: 2.6;
+      }
+      /* au survol du mur, les autres vidéos s'atténuent */
+      .video-wall:hover .video-panel:not(:hover):not(.is-focus) {
+        .video-media,
+        .video-preview {
+          opacity: 0.55;
+        }
+      }
+      video.video-media {
         cursor: pointer;
-        overflow: hidden;
+      }
 
-        img {
+      /* Aperçu YouTube « cover » : l'iframe remplit le panneau en rognant */
+      .video-preview {
+        container-type: size;
+        overflow: hidden;
+        pointer-events: none;
+        iframe {
+          position: absolute;
+          top: 50%;
+          left: 50%;
           width: 100%;
           height: 100%;
-          object-fit: cover;
-          opacity: 0.82;
-          display: block;
-          transition:
-            opacity 0.3s ease,
-            transform 0.4s ease;
+          width: max(100cqw, 177.78cqh);
+          height: max(100cqh, 56.25cqw);
+          border: 0;
+          transform: translate(-50%, -50%);
+          animation: video-in 0.7s ease 1.2s both;
         }
+      }
+      @keyframes video-in {
+        from {
+          opacity: 0;
+        }
+      }
 
-        /* pause-like effect: dim + scale on hover */
-        &:hover img {
-          opacity: 0.55;
-          transform: scale(1.04);
+      .video-hit {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        display: grid;
+        place-items: center;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+      }
+      .video-play-ring {
+        display: grid;
+        place-items: center;
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: rgb(25 64 60 / 55%);
+        backdrop-filter: blur(6px);
+        color: #fff9ef;
+        opacity: 0.9;
+        transition:
+          background 0.25s ease,
+          transform 0.25s ease,
+          opacity 0.25s ease;
+        svg {
+          width: 48px;
+          height: 48px;
         }
-        &:hover .video-play-ring {
-          transform: scale(1.12);
+      }
+      .video-hit:hover .video-play-ring,
+      .video-hit:focus-visible .video-play-ring {
+        opacity: 1;
+        background: var(--brand-coral);
+      }
+
+      .video-frame {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        width: 100%;
+        height: 100%;
+        border: 0;
+        background: #000;
+      }
+      .video-stop {
+        position: absolute;
+        inset-block-start: 12px;
+        inset-inline-end: 12px;
+        z-index: 3;
+        display: grid;
+        place-items: center;
+        width: 32px;
+        height: 32px;
+        border: 0;
+        border-radius: 50%;
+        background: rgb(9 26 24 / 72%);
+        color: #fff9ef;
+        cursor: pointer;
+        transition: background 0.2s ease;
+        svg {
+          width: 12px;
+          height: 12px;
+        }
+        &:hover {
           background: var(--brand-coral);
         }
       }
 
-      .video-play-overlay {
-        position: absolute;
-        inset: 0;
-        display: grid;
-        place-items: center;
-      }
-
-      .video-play-ring {
-        display: grid;
-        place-items: center;
-        width: 68px;
-        height: 68px;
-        border-radius: 50%;
-        background: rgb(25 64 60 / 82%);
-        color: #fff9ef;
-        transition:
-          background 0.25s ease,
-          transform 0.25s ease;
-        svg {
-          width: 52px;
-          height: 52px;
-        }
-      }
-
-      .video-embed-wrap {
-        position: relative;
-        aspect-ratio: 16 / 9;
-        width: 100%;
-        iframe {
-          position: absolute;
-          inset: 0;
-          width: 100%;
-          height: 100%;
-          border: 0;
-          display: block;
-        }
-      }
-
       .video-meta {
-        padding: 14px 18px 16px;
-        border-top: 1px solid var(--line-soft);
-        h3 {
-          font-size: 0.96rem;
-          color: var(--brand-teal);
-          margin-bottom: 4px;
-        }
-        p {
-          color: var(--ink-muted);
-          font-size: 0.82rem;
-          line-height: 1.6;
-          margin: 0;
-        }
+        position: absolute;
+        inset-inline: 0;
+        inset-block-end: 0;
+        z-index: 3;
+        padding: 56px clamp(18px, 2.4vw, 32px) clamp(20px, 2.6vw, 34px);
+        color: #fff9ef;
+        pointer-events: none;
+      }
+      .video-panel.is-focus .video-meta {
+        display: none;
+      }
+      .video-index {
+        color: var(--brand-coral);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+      }
+      .video-meta h3 {
+        margin: 10px 0 6px;
+        color: #fff9ef;
+        font-size: clamp(1rem, 1.5vw, 1.35rem);
+        line-height: 1.25;
+      }
+      .video-meta p {
+        max-width: 36ch;
+        margin: 0;
+        color: rgb(255 249 239 / 78%);
+        font-size: 0.85rem;
+        line-height: 1.6;
       }
 
       /* ── Responsive ──────────────────────────────────────────── */
@@ -753,13 +853,30 @@ interface Stat {
           grid-template-columns: 1fr;
         }
       }
+      @media (min-width: 761px) and (max-width: 1024px) {
+        .video-wall {
+          height: clamp(260px, 40svh, 400px);
+        }
+      }
       @media (max-width: 760px) {
         .slider-cell {
           width: 240px;
           height: 170px;
         }
-        .video-grid {
-          grid-template-columns: 1fr;
+        .video-wall {
+          flex-direction: column;
+          width: calc(100% - 32px);
+          height: auto;
+          gap: 4px;
+        }
+        .video-panel,
+        .video-wall:has(.is-focus) .video-panel {
+          flex: none;
+          aspect-ratio: 16 / 10;
+        }
+        .video-play-ring {
+          width: 54px;
+          height: 54px;
         }
       }
       @media (max-width: 480px) {
@@ -770,8 +887,13 @@ interface Stat {
       }
 
       @media (prefers-reduced-motion: reduce) {
-        .slider-track {
+        .slider-track,
+        .video-preview iframe {
           animation: none !important;
+        }
+        .video-media,
+        .video-preview {
+          transition: none;
         }
       }
 
@@ -862,222 +984,109 @@ interface Stat {
         line-height: 1.4;
       }
 
-      /* ── Reviews ──────────────────────────────────────────── */
+      /* ── Reviews (layout compact : avis en vedette + sélecteur) ── */
       .reviews-section {
         position: relative;
-        padding-block: var(--space-section);
+        padding-block: clamp(28px, 3.6vw, 44px);
         background: var(--paper);
-        overflow: hidden;
-      }
-      .reviews-bg-strip {
-        position: absolute;
-        inset-inline-start: 0;
-        inset-block-start: 0;
-        width: 38%;
-        height: 100%;
-        background: var(--surface-soft);
-        border-inline-end: 1px solid var(--line);
+        border-bottom: 1px solid var(--line-soft);
       }
       .reviews-inner {
         position: relative;
         display: grid;
-        grid-template-columns: 320px 1fr;
-        gap: clamp(28px, 5vw, 64px);
-        align-items: start;
+        gap: clamp(14px, 2vw, 20px);
       }
       .reviews-header {
-        position: sticky;
-        top: 88px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 12px 24px;
+        flex-wrap: wrap;
       }
       .reviews-eyebrow {
-        margin-bottom: 12px;
+        margin-bottom: 6px;
       }
       .reviews-title {
-        font-size: clamp(1.8rem, 3.2vw, 2.8rem);
-        margin: 0 0 12px;
-        line-height: 1.1;
+        font-size: clamp(1.35rem, 2.2vw, 1.85rem);
+        margin: 0 0 6px;
+        line-height: 1.12;
       }
       .reviews-lead {
+        max-width: 56ch;
+        margin: 0;
         color: var(--ink-muted);
-        font-size: 0.92rem;
-        line-height: 1.7;
-        margin-bottom: 20px;
+        font-size: 0.82rem;
+        line-height: 1.55;
       }
       .reviews-aggregate {
         display: flex;
         align-items: center;
         gap: 10px;
-        padding: 10px 16px;
+        padding: 6px 12px;
         background: var(--surface);
         border: 1px solid var(--line);
         border-inline-start: 3px solid #e8a030;
-      }
-      .agg-stars {
-        display: flex;
-        gap: 2px;
       }
       .agg-score {
         font: 400 1.5rem/1 var(--font-display);
         color: var(--brand-teal);
       }
+      .agg-meta {
+        display: grid;
+        gap: 1px;
+      }
+      .agg-stars {
+        display: flex;
+        gap: 1px;
+        font-size: 0.7rem;
+      }
       .agg-count {
         color: var(--ink-muted);
-        font-size: 0.78rem;
+        font-size: 0.7rem;
       }
 
       .reviews-main {
         display: grid;
+        grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
         gap: 12px;
-        min-width: 0;
+        align-items: stretch;
       }
       .review-featured-wrap {
-        scroll-margin-top: 96px;
-      }
-      .reviews-grid {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
+        min-width: 0;
       }
 
-      .review-card {
+      /* Avis en vedette */
+      .review-featured {
         position: relative;
         display: flex;
         flex-direction: column;
-        gap: 12px;
-        padding: clamp(16px, 2.2vw, 24px);
-        background: var(--surface);
-        border: 1px solid var(--line);
-        transition:
-          box-shadow 0.25s ease,
-          transform 0.25s ease,
-          border-color 0.25s ease;
-      }
-
-      /* Cartes cliquables */
-      .review-selectable {
-        cursor: pointer;
-        overflow: hidden;
-        &::before {
-          content: '';
-          position: absolute;
-          inset-block-start: 0;
-          inset-inline: 0;
-          height: 2px;
-          background: var(--brand-coral);
-          transform: scaleX(0);
-          transform-origin: left;
-          transition: transform 0.3s ease;
-        }
-        &:hover {
-          box-shadow: var(--shadow-soft);
-          transform: translateY(-3px);
-        }
-        &:hover::before,
-        &:focus-visible::before {
-          transform: scaleX(1);
-        }
-        &:hover .review-select-hint,
-        &:focus-visible .review-select-hint {
-          opacity: 1;
-          transform: translateY(0);
-        }
-        &:hover .review-avatar {
-          box-shadow:
-            0 0 0 2px var(--surface),
-            0 0 0 3px var(--brand-coral);
-        }
-        &:active {
-          transform: translateY(-1px);
-        }
-        .review-text p {
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 4;
-          line-clamp: 4;
-          overflow: hidden;
-        }
-      }
-      .review-select-hint {
-        align-self: flex-start;
-        margin-top: auto;
-        color: var(--brand-coral);
-        font-size: 0.66rem;
-        font-weight: 700;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-        opacity: 0;
-        transform: translateY(4px);
-        transition:
-          opacity 0.2s ease,
-          transform 0.2s ease;
-      }
-
-      /* Avis en vedette (bloc vert) */
-      .review-featured {
-        gap: 16px;
-        padding: clamp(20px, 3vw, 32px);
+        gap: 10px;
+        padding: clamp(14px, 1.8vw, 20px);
         background: linear-gradient(
           135deg,
           var(--brand-teal) 0%,
           var(--brand-teal-mid) 100%
         );
-        border-color: var(--brand-teal);
-        border-inline-start: 4px solid var(--brand-coral);
+        border: 1px solid var(--brand-teal);
+        border-inline-start: 3px solid var(--brand-coral);
         box-shadow: var(--shadow-soft);
         overflow: hidden;
-        animation: review-swap 0.35s ease both;
+        animation: review-swap 0.3s ease both;
         &::after {
           content: '“';
           position: absolute;
-          inset-block-end: -36px;
-          inset-inline-end: 20px;
-          font: 400 10rem/1 var(--font-display);
-          color: rgb(233 231 217 / 6%);
+          inset-block-end: -22px;
+          inset-inline-end: 14px;
+          font: 400 6.5rem/1 var(--font-display);
+          color: rgb(233 231 217 / 7%);
           pointer-events: none;
-        }
-        .review-author-info strong {
-          color: #e9e7d9;
-          font-size: 0.96rem;
-        }
-        .review-country {
-          color: rgb(233 231 217 / 65%);
-        }
-        .review-text {
-          border-top-color: rgb(233 231 217 / 16%);
-        }
-        .review-text p {
-          color: #e9e7d9;
-          font-size: 1.02rem;
-          line-height: 1.75;
-          max-width: 64ch;
-        }
-        .review-quote {
-          color: var(--brand-coral-lt);
-          opacity: 0.6;
-        }
-        .star {
-          color: rgb(233 231 217 / 25%);
-        }
-        .star.filled {
-          color: #e8a030;
-        }
-        .review-avatar {
-          width: 56px;
-          height: 56px;
-          box-shadow:
-            0 0 0 2px var(--brand-teal),
-            0 0 0 3px var(--brand-coral-lt);
-        }
-        .review-service-badge {
-          background: rgb(233 231 217 / 10%);
-          color: var(--brand-coral-lt);
-          border-color: rgb(233 231 217 / 22%);
         }
       }
       @keyframes review-swap {
         from {
           opacity: 0;
-          transform: translateY(8px);
+          transform: translateY(6px);
         }
         to {
           opacity: 1;
@@ -1085,102 +1094,186 @@ interface Stat {
         }
       }
 
-      .review-card-top {
+      .review-head {
         display: flex;
-        align-items: flex-start;
-        gap: 12px;
+        align-items: center;
+        gap: 10px;
       }
       .review-avatar-wrap {
         position: relative;
         flex-shrink: 0;
       }
       .review-avatar {
-        width: 48px;
-        height: 48px;
+        display: block;
+        width: 40px;
+        height: 40px;
         border-radius: 50%;
         object-fit: cover;
-        border: 0;
-        display: block;
+      }
+      .review-featured .review-avatar {
         box-shadow:
-          0 0 0 2px var(--surface),
-          0 0 0 3px var(--line);
-        transition: box-shadow 0.25s ease;
+          0 0 0 2px var(--brand-teal),
+          0 0 0 3px var(--brand-coral-lt);
       }
       .review-flag {
         position: absolute;
-        inset-block-end: -4px;
-        inset-inline-end: -4px;
+        inset-block-end: -3px;
+        inset-inline-end: -3px;
         display: grid;
         place-items: center;
-        width: 20px;
-        height: 20px;
+        width: 16px;
+        height: 16px;
         border-radius: 50%;
         background: var(--surface);
         box-shadow: 0 1px 3px rgb(25 64 60 / 25%);
-        font-size: 0.72rem;
+        font-size: 0.6rem;
         line-height: 1;
       }
       .review-author-info {
         flex: 1;
+        min-width: 0;
         display: grid;
-        gap: 3px;
+        gap: 1px;
         strong {
-          font-size: 0.88rem;
-          color: var(--brand-teal);
+          color: #e9e7d9;
+          font-size: 0.9rem;
           font-weight: 700;
         }
       }
       .review-country {
+        color: rgb(233 231 217 / 65%);
         font-size: 0.72rem;
-        font-weight: 500;
-        letter-spacing: 0.02em;
-        color: var(--ink-muted);
       }
       .review-stars {
         display: flex;
-        gap: 2px;
-        margin-top: 3px;
+        gap: 1px;
       }
       .star {
-        font-size: 0.82rem;
-        color: var(--line);
+        font-size: 0.78rem;
+        color: rgb(233 231 217 / 25%);
         &.filled {
           color: #e8a030;
         }
       }
-      .review-service-badge {
-        flex-shrink: 0;
-        align-self: flex-start;
-        padding: 4px 10px;
-        background: var(--surface-soft);
-        border: 1px solid var(--line);
-        color: var(--brand-teal);
-        font-size: 0.58rem;
-        font-weight: 700;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        white-space: nowrap;
+      .agg-stars .star {
+        font-size: inherit;
       }
       .review-text {
         flex: 1;
         margin: 0;
-        padding-top: 12px;
-        border-top: 1px solid var(--line-soft);
         position: relative;
+        z-index: 1;
+        p {
+          max-width: 62ch;
+          margin: 0;
+          color: #e9e7d9;
+          font-size: 0.92rem;
+          line-height: 1.65;
+        }
       }
-      .review-quote {
-        display: block;
-        font: 400 2.6rem/1 var(--font-display);
-        color: var(--brand-coral);
-        opacity: 0.4;
-        margin-bottom: -10px;
-        line-height: 0.8;
+      .review-foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding-top: 8px;
+        border-top: 1px solid rgb(233 231 217 / 16%);
+        position: relative;
+        z-index: 1;
       }
-      .review-text p {
-        color: var(--ink);
-        font-size: 0.9rem;
-        line-height: 1.7;
-        margin: 0;
+      .review-service-badge {
+        padding: 2px 9px;
+        background: rgb(233 231 217 / 10%);
+        border: 1px solid rgb(233 231 217 / 22%);
+        color: var(--brand-coral-lt);
+        font-size: 0.72rem;
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .review-counter {
+        color: rgb(233 231 217 / 55%);
+        font-size: 0.72rem;
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* Sélecteur compact */
+      .review-tabs {
+        display: grid;
+        grid-auto-rows: 1fr;
+        gap: 6px;
+        min-width: 0;
+      }
+      .review-tab {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 10px;
+        font: inherit;
+        text-align: start;
+        color: inherit;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-inline-start: 3px solid transparent;
+        cursor: pointer;
+        transition:
+          background 0.2s ease,
+          border-color 0.2s ease;
+        .review-avatar {
+          width: 30px;
+          height: 30px;
+          box-shadow: 0 0 0 1px var(--line);
+        }
+        .review-flag {
+          width: 14px;
+          height: 14px;
+          font-size: 0.52rem;
+        }
+        &:hover {
+          border-color: var(--brand-teal);
+        }
+        &:focus-visible {
+          outline: 2px solid var(--brand-coral);
+          outline-offset: 2px;
+        }
+        &.is-active {
+          background: var(--surface-soft);
+          border-color: var(--brand-teal);
+          border-inline-start-color: var(--brand-coral);
+          cursor: default;
+        }
+      }
+      .review-tab-info {
+        display: grid;
+        gap: 1px;
+        min-width: 0;
+        strong {
+          color: var(--brand-teal);
+          font-size: 0.8rem;
+          font-weight: 700;
+        }
+        span {
+          color: var(--ink-muted);
+          font-size: 0.7rem;
+        }
+        strong,
+        span {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+      .review-tab-rating {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        color: var(--ink-muted);
+        font-size: 0.74rem;
+        font-weight: 700;
+        i {
+          color: #e8a030;
+          font-style: normal;
+        }
       }
 
       @media (max-width: 1024px) {
@@ -1194,34 +1287,37 @@ interface Stat {
         .stats-brand-col {
           justify-content: center;
         }
-        .reviews-inner {
-          grid-template-columns: 1fr;
-        }
-        .reviews-header {
-          position: static;
-        }
       }
       @media (max-width: 900px) {
         .stats-numbers {
           grid-template-columns: repeat(2, 1fr);
         }
-        .reviews-bg-strip {
-          display: none;
+        .reviews-main {
+          grid-template-columns: 1fr;
+        }
+        .review-tabs {
+          display: flex;
+          overflow-x: auto;
+          scroll-snap-type: x proximity;
+          padding-bottom: 4px;
+        }
+        .review-tab {
+          flex: 0 0 min(230px, 72%);
+          scroll-snap-align: start;
         }
       }
       @media (max-width: 600px) {
-        .reviews-grid {
-          grid-template-columns: 1fr;
+        .review-head {
+          flex-wrap: wrap;
         }
-        .review-select-hint {
-          opacity: 1;
-          transform: none;
+        .review-stars {
+          order: 3;
+          flex-basis: 100%;
         }
       }
-      @media (hover: none) {
-        .review-select-hint {
-          opacity: 1;
-          transform: none;
+      @media (prefers-reduced-motion: reduce) {
+        .review-featured {
+          animation: none;
         }
       }
     `,
@@ -1231,6 +1327,13 @@ export class HomePageComponent implements AfterViewInit {
   readonly featuredServices = FEATURED_SERVICES;
   readonly steps = [1, 2, 3];
   readonly activeVideo = signal<string | null>(null);
+  /** Passe à true quand le mur de vidéos entre dans l'écran (déclenche les aperçus). */
+  readonly wallVisible = signal(false);
+  readonly reduceMotion =
+    typeof matchMedia !== 'undefined' &&
+    matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  @ViewChild('videoWall') private videoWall?: ElementRef<HTMLElement>;
 
   /* ── Hero background image (remplacez l'URL par votre photo) ─── */
   readonly heroImage =
@@ -1239,7 +1342,23 @@ export class HomePageComponent implements AfterViewInit {
   constructor(readonly i18n: I18nService) {}
 
   ngAfterViewInit(): void {
-    if (typeof IntersectionObserver === 'undefined') return;
+    if (typeof IntersectionObserver === 'undefined') {
+      if (!this.reduceMotion) this.wallVisible.set(true);
+      return;
+    }
+    const wall = this.videoWall?.nativeElement;
+    if (wall && !this.reduceMotion) {
+      const wallObs = new IntersectionObserver(
+        ([entry], o) => {
+          if (entry.isIntersecting) {
+            this.wallVisible.set(true);
+            o.disconnect();
+          }
+        },
+        { threshold: 0.2 },
+      );
+      wallObs.observe(wall);
+    }
     const obs = new IntersectionObserver(
       (entries) => entries.forEach(e => {
         if (e.isIntersecting) {
@@ -1341,10 +1460,47 @@ export class HomePageComponent implements AfterViewInit {
       caption: 'Guide complet pour les études internationales',
       thumb: 'https://img.youtube.com/vi/hmMnFDMkMoI/maxresdefault.jpg',
     },
+    {
+      id: '3OMaWdGRljg',
+      title: 'Votre accompagnement, étape par étape',
+      caption: 'Une équipe à vos côtés, de la formation au départ',
+      thumb: 'https://img.youtube.com/vi/3OMaWdGRljg/maxresdefault.jpg',
+    },
   ];
+
+  /** Aperçu muet, en boucle, sans commandes. */
+  previewUrl(id: string): string {
+    return (
+      `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}` +
+      '&controls=0&modestbranding=1&playsinline=1&rel=0&disablekb=1&iv_load_policy=3'
+    );
+  }
+
+  /** Lecture complète : son + commandes. */
+  focusUrl(id: string): string {
+    return `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1`;
+  }
 
   playVideo(id: string): void {
     this.activeVideo.set(id);
+  }
+
+  stopVideo(): void {
+    this.activeVideo.set(null);
+  }
+
+  /** Clic sur une vidéo locale : active / coupe le son. */
+  toggleSound(event: Event): void {
+    const video = event.currentTarget as HTMLVideoElement;
+    video.muted = !video.muted;
+  }
+
+  /** maxresdefault n'existe pas toujours : repli sur hqdefault. */
+  fixThumb(event: Event, id: string): void {
+    const img = event.target as HTMLImageElement;
+    const fallback = `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+    const broken = event.type === 'error' || img.naturalWidth <= 120;
+    if (broken && img.src !== fallback) img.src = fallback;
   }
 
   starsArray(rating: number): boolean[] {
@@ -1411,21 +1567,12 @@ export class HomePageComponent implements AfterViewInit {
     },
   ];
 
-  /* ── Avis sélectionné (affiché en haut, dans le bloc vert) ───── */
+  /* ── Avis sélectionné (affiché en grand à côté du sélecteur) ───── */
   readonly selectedIndex = signal(0);
 
   readonly selectedReview = computed(() => this.reviews[this.selectedIndex()]);
 
-  /** Tous les avis sauf celui sélectionné, avec leur index d'origine. */
-  readonly otherReviews = computed(() =>
-    this.reviews
-      .map((review, index) => ({ review, index }))
-      .filter((item) => item.index !== this.selectedIndex()),
-  );
-
-  selectReview(index: number, anchor?: HTMLElement): void {
+  selectReview(index: number): void {
     this.selectedIndex.set(index);
-    // Ramène l'avis sélectionné dans la vue (utile sur mobile)
-    anchor?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 }
