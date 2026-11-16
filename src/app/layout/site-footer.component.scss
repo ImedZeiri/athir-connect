@@ -185,21 +185,6 @@
   }
 
   &.social-facebook { --brand: #1877f2; }
-  &.social-linkedin { --brand: #0a66c2; }
-
-  &.social-youtube {
-    --brand: #ff0000;
-
-    svg polygon {
-      fill: var(--footer-deep);
-      transition: fill .2s ease;
-    }
-
-    &:hover svg polygon,
-    &:focus-visible svg polygon {
-      fill: #ff0000;
-    }
-  }
 
   &.social-instagram {
     --brand: #e1306c;
@@ -220,6 +205,10 @@
       box-shadow: -2px -2px 0 #25f4ee, 2px 2px 0 #fe2c55;
     }
   }
+
+  &.social-email { --brand: var(--footer-accent); }
+
+  &.social-whatsapp { --brand: #25d366; }
 }
 
 /* ---------- Contact + petite carte ---------- */

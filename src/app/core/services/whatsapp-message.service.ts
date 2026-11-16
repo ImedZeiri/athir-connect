@@ -22,6 +22,6 @@ export class WhatsappMessageService {
       `${this.i18n.t('form.message')}: ${request.message.trim()}`
     ].filter(Boolean);
 
-    return `https://wa.me/?text=${encodeURIComponent(lines.join('\n'))}&lang=${language}`;
+    return `https://wa.me/21623815975?text=${encodeURIComponent(lines.join('\n'))}`;
   }
 }

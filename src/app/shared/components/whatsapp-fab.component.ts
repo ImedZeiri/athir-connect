@@ -9,8 +9,8 @@ import {
 } from '@angular/core';
 import { I18nService } from '../../core/services/i18n.service';
 
-const WA_NUMBER = '213XXXXXXXXX'; // ← remplacer par le vrai numéro
-const WA_HR_NUMBER = '213XXXXXXXXX'; // ← numéro WhatsApp de l'agent RH
+const WA_NUMBER = '21623815975';
+const WA_HR_NUMBER = '21623815975';
 const HR_GREETING = 'Bonjour, je souhaite échanger avec un agent RH.';
 
 interface ChatMessage {
